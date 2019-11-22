@@ -356,7 +356,7 @@ async function submitMobileTerminatedMessages(auth, messages) {
  * Retrieves Mobile-Terminated messages submitted, by ID
  * @param {ApiV1Auth} auth Mailbox authentication
  * @param {(number|number[])} ids An array of unique ForwardMessageID numbers
- * @returns {GetForwardMessagesResult} The requested IDs and/or error code
+ * @returns {Promise<GetForwardMessagesResult} The requested IDs and/or error code
  */
 async function getMobileTerminatedMessages(auth, ids) {
     var fwIds = '';
@@ -421,7 +421,7 @@ const ForwardMessageStates = [
  * @param {(number|number[])} [ids] An ID or array of IDs to retrieve status for
  * @param {string} startTime The timestamp 'YYYY-MM-DD hh:mm:ss' for the start of retrieval
  * @param {string} endTime The timestamp 'YYYY-MM-DD hh:mm:ss' for the end of retrieval
- * @returns {GetForwardStatusesResult} result
+ * @returns {Promise<GetForwardStatusesResult} result
  */
 async function getMobileTerminatedStatuses(auth, ids, startTime, endTime) {
     var filter = {};
@@ -459,6 +459,51 @@ async function getMobileTerminatedStatuses(auth, ids, startTime, endTime) {
                 resolve(result);
             }
         })
+    });
+
+    var response = await promise;
+    return response;
+}
+
+/**
+ * @typedef {Object} CancelForwardMessagesResult
+ * @property {number} ErrorID An error code for the submit_cancelations operation
+ * @property {ForwardSubmission[]} Submissions The list of submitted messages to cancel
+ */
+/**
+ * Requests cancellation of specific Mobile-Terminated messages
+ * @param {ApiV1Auth} auth Mailbox authenticataion
+ * @param {(number|number[])} ids Message id(s) to be cancelled
+ * 
+ * @returns {Promise<CancelForwardMessagesResult}
+ */
+async function cancelMobileTerminatedMessages(auth, ids) {
+    var fwIds = '';
+    if (typeof(ids) === 'number') {
+        ids = [ids];
+    }
+    for (var i = 0; i < ids.length; i++) {
+        if (i > 0) {
+            fwIds += ',';
+        }
+        fwIds += ids[i];
+    }
+
+    var promise = new Promise(function(resolve, reject){
+        var options = {
+            uri: apiUrl + getUri('submit_cancelations.json/', auth, { fwIDs: fwIds }),
+        };
+        request.get(options, function(err, resp, body) {
+            if (err) {
+                logger.error(obfuscateLog(options.uri) + ' returned ' + err);
+                reject(err);
+            } else {
+                var result = JSON.parse(body);
+                var cancellationsRequestedCount = result.Submissions !== null ? result.Submissions.length : 0;
+                logger.debug(cancellationsRequestedCount + ' cancellations requested for Mailbox ' + auth.accessId);
+                resolve(result);
+            }
+        });
     });
 
     var response = await promise;
@@ -522,6 +567,46 @@ async function getMobileIds(auth, filter) {
     return result;
 }
 
+/**
+ * @typedef {Object} BroadcastIddList
+ * @property {number} ErrorID An error code for the get_mobiles_paged operation
+ * @property {BroadcastInformation[]} BroadcastInfos A list of Mobile objects
+ */
+/**
+ * @typedef {Object} BroadcastInformation
+ * @property {string} ID The unique Mobile ID
+ * @property {string} Description A description as provisioned on the MGS
+ */
+/**
+ * Returns the list of Broadcast IDs associated with the Mailbox
+ * @param {ApiV1Auth} auth Mailbox authentication
+ * 
+ * @returns {BroadcastIddList} A response list with error code
+ */
+async function getBroadcastIds(auth) {
+    let promise = new Promise((resolve, reject) => {
+        var options = {
+            uri: apiUrl + getUri('get_broadcast_infos.json/', auth),
+        };
+        request.get(options, function(err, resp, body) {
+            if (err) {
+                logger.error(obfuscateLog(options.uri) + ' returned ' + err);
+                reject(err);
+            } else {
+                var result = JSON.parse(body);
+                if (result.BroadcastInfos) {
+                    var broadcastIdsCount = result.BroadcastInfos !== null ? result.BroadcastInfos.length : 0;
+                    logger.debug(broadcastIdsCount + ' Broadcast IDs retrieved from Mailbox ' + auth.accessId);
+                }
+                resolve(result);
+            }
+        })
+    });
+    //TODO: should be a More flag to indicate when done?
+    let result = await promise;
+    return result;
+}
+
 module.exports = {
     apiUrl,
     getMgsVersion,
@@ -530,7 +615,9 @@ module.exports = {
     getErrorDefinitions,
     getMobileOriginatedMessages,
     submitMobileTerminatedMessages,
+    cancelMobileTerminatedMessages,
     getMobileTerminatedStatuses,
     getMobileTerminatedMessages,
     getMobileIds,
+    getBroadcastIds,
 };
