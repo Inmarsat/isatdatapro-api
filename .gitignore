@@ -4,6 +4,3 @@ node_modules/*
 .vscode/*
 config/mailboxes.js
 logs/*
-
-
-config/mailboxes.js
