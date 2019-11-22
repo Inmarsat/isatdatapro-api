@@ -5,19 +5,23 @@ const winston = require('./config/winston');
 
 var logger = winston;
 
-// TODO: move this to a config file so it can be either Inmarsat or ORBCOMM compatible
-const API_URL = "https://api.inmarsat.com/v1/idp/gateway/rest/";
+// Set this to .inmarsat (live) 
+//  or .simulator (Modem Simulator with external routable address specified in message-gateway.js)
+const apiUrl = require('./config/message-gateway');
 
 /**
+ * An authentication pair for the IDP Messaging API V1, used for various operations
  * @typedef {Object} ApiV1Auth
  * @param {string} accessId The mailbox unique access_id
  * @param {string} password The mailbox password
  */
+
 /**
- * Returns a URI for an authenticated operation on the IDP API V1.  Replaces spaces with %20.
+ * Returns a URI for an authenticated (GET) operation on the IDP API V1.  Replaces spaces with %20.
  * @param {string} baseUri The API operation e.g. get_return_messages
- * @param {ApiV1Auth} auth 
- * @param {Object} filters 
+ * @param {ApiV1Auth} auth Mailbox authentication
+ * @param {Object} filters Various parameters specific to the GET operation
+ * 
  * @returns {string} a URI including formatted authentication and query parameters
  */
 function getUri(baseUri, auth, filters) {
@@ -32,21 +36,25 @@ function getUri(baseUri, auth, filters) {
 }
 
 /**
- * Obfuscates the password from the URI query string sent to the Inmarsat MGS
- * TODO: support for password obfuscation on all operations
+ * Obfuscates the authentication credentials (accesssId, password) from the (GET) URI query string for log security
+ * TODO: support for password obfuscation on all operations e.g. POST body, not keyed with '='
  * @param {string} debugMessage The message with password readable
+ * 
  * @returns {string} Debug message with password obfuscated for logging
  */
-function obfuscatePassword(debugMessage) {
-    if (debugMessage.indexOf('"uri"') !== -1) {
-        var obsPass = '***';
-        var messageComponents = debugMessage.split('&');
+function obfuscateLog(debugMessage) {
+    if (debugMessage.indexOf('password=') !== -1
+        || debugMessage.indexOf('access_id=') !== -1) {
+        var obscure = '***';
+        var messageComponents = debugMessage.split(/[?&]/);
         var replaceMessage = messageComponents[0];
         for (var c=1; c < messageComponents.length; c++) {
             if (messageComponents[c].split('=')[0] === 'password') {
-                messageComponents[c] = 'password=' + obsPass;
+                messageComponents[c] = '&password=' + obscure;
+            } else if (messageComponents[c].split('=')[0] === 'access_id') {
+                messageComponents[c] = '?access_id=' + obscure;
             }
-            replaceMessage += '&' + messageComponents[c];
+            replaceMessage += messageComponents[c];
         }
         return replaceMessage;
     } else {
@@ -55,13 +63,13 @@ function obfuscatePassword(debugMessage) {
 }
 
 /**
- * Retrieves API Version from the MGS as a Promise
- * @returns {string} version
+ * Returns the MGS software version details
+ * @returns {Promise<string} MGS software version
  */
-function info_version() {
-    return new Promise(function(resolve, reject){
+async function getMgsVersion() {
+    var promise = new Promise((resolve, reject) => {
         var options = {
-            uri: API_URL + 'info_version.json/',
+            uri: apiUrl + 'info_version.json/',
         };
         request.get(options, function(err, resp, body) {
             if (err) {
@@ -72,27 +80,20 @@ function info_version() {
                 logger.debug(options.uri + ' returned ' + result);
                 resolve(result);
             }
-        })
-    })
-}
-
-/**
- * Returns the MGS software version details
- * @returns {string} MGS software version
- */
-async function getMgsVersion() {
-    var mgsVersion = await info_version();
+        });
+    });
+    var mgsVersion = await promise;
     return mgsVersion;
 }
 
 /**
- * Retrieves UTC time from the MGS as a Promise
- * @returns {string} UTC time formatted as 'YYYY-MM-DD hh:mm:ss'
+ * Returns current UTC time at the MGS
+ * @returns {Promise<string} UTC time formatted as 'YYYY-MM-DD hh:mm:ss'
  */
-function info_utc_time() {
-    return new Promise(function(resolve, reject){
+async function getUtcTime() {
+    var promise = new Promise(function(resolve, reject){
         var options = {
-            uri: API_URL + 'info_utc_time.json/',
+            uri: apiUrl + 'info_utc_time.json/',
         };
         request.get(options, function(err, resp, body) {
             if (err) {
@@ -103,16 +104,9 @@ function info_utc_time() {
                 logger.debug(options.uri + ' returned ' + result);
                 resolve(result);
             }
-        })
-    })
-}
-
-/**
- * Returns current UTC time at the MGS
- * @returns {string} UTC time formatted as 'YYYY-MM-DD hh:mm:ss'
- */
-async function getUtcTime() {
-    var utcTime = await info_utc_time();
+        });
+    });
+    var utcTime = await promise;
     return utcTime;
 }
 
@@ -123,13 +117,13 @@ async function getUtcTime() {
  * @property {string} Description A verbose description of the error
  */
 /**
- * Retreives error definitions from the MGS as a Promise
- * @returns {[ErrorDefinition]} An array of error definitions
+ * Returns an array of error definitions based on an API error code
+ * @returns {Promise<ErrorDefinition[]} An array of error definitions
  */
-function info_errors() {
-    return new Promise(function(resolve, reject){
+async function getErrorDefinitions() {
+    var promise = new Promise((resolve, reject) => {
         var options = {
-            uri: API_URL + 'info_errors.json/',
+            uri: apiUrl + 'info_errors.json/',
         };
         request.get(options, function(err, resp, body) {
             if (err) {
@@ -140,18 +134,20 @@ function info_errors() {
                 logger.debug(options.uri + ' returned ' + result.length + ' error codes');
                 resolve(result);
             }
-        })
-    })
+        });
+    });
+    var errorDefinitions = await promise;
+    return errorDefinitions;
 }
 
 /**
  * Returns a descriptive error name based on an API error code
  * @param {(string|number)} errorId The ErrorID number returned by the API operation
- * @returns {string} An error name/description or 'UNDEFINED'
+ * @returns {Promise<string} An error name/description or 'UNDEFINED'
  */
 async function getErrorName(errorId) {
     var errorName = 'UNDEFINED';
-    var errorDescriptions = await info_errors();
+    var errorDescriptions = await getErrorDefinitions();
     errorDescriptions.forEach(function(element) {
         if (Number(element.ID) === Number(errorId)) {
             errorName = element.Name;
@@ -161,23 +157,24 @@ async function getErrorName(errorId) {
 }
 
 /**
- * Returns an array of error name based on an API error code
- * @returns {[ErrorDefinition]} An array of error definitions
- */
-async function getErrorDefinitions() {
-    var errorDefinitions = await info_errors();
-    return errorDefinitions;
-}
-
-/**
  * A data structure containing various content and metadata for data transported over the satellite network, within a message
  * @typedef {Object} Field
  * @property {string} Name A descriptive name of the field, usually in camelCase notation
- * @property {string} [Type] Supported types enum, boolean, unsignedint, signedint, string, data, array, message, dynamic, property
- * @property {(string|number|number[]|Object)} Value Dependent on Type
- * @property {Object[]} [Elements] present if Type is array or message
+ * @property {string} [Type] Supported types
+ *  <br>&nbsp;&nbsp;'enum' is presented as string on decode, may be number or string on encode
+ *  <br>&nbsp;&nbsp;'boolean' is presented as a string Value
+ *  <br>&nbsp;&nbsp;'unsignedint', 'signedint' are presented as a string Value
+ *  <br>&nbsp;&nbsp;'string'
+ *  <br>&nbsp;&nbsp;'data' is a string, base64 encoded
+ *  <br>&nbsp;&nbsp;'array' is an object with Elements instead of Value
+ *  <br>&nbsp;&nbsp;'message' is an object with Message instead of Value
+ *  <br>&nbsp;&nbsp;'dynamic' TBC
+ *  <br>&nbsp;&nbsp;'property' TBC
+ * @property {string} [Value] Present if Type is 'enum', 'boolean', 'unsignedint', 'signedint', 'string', 'data'
+ * @property {Object[]} [Elements] present if Type is 'array'
  * @property {number} [Elements.Index] index of the Elements array
- * @property {Field[]} [Elements.Fields] present if Type is message
+ * @property {Field[]} [Elements.Fields] A list of field objects
+ * @property {Message} [Message] present if Type is 'message'
  */
 /**
  * A set of metadata encapsulating data transported over the satellite network as a message
@@ -198,20 +195,25 @@ async function getErrorDefinitions() {
  * @property {string} MessageUTC A timestamp YYYY-MM-DD HH:MM:SS when the message was retrieved by the MGS
  * @property {string} MobileID The unique Mobile ID of the terminal/modem that sent the message
  * @property {number} SIN Service Identification Number the first byte of payload optionally used for codec
- * @property {number[]} [RawPayload] An array of bytes as decimal numbers (0..255), present if requested in the get_return_messages operation
- * @property {Message} [Payload] A JSON data structure present if the MGS has decoded the raw payload using a Message Definition File on the Mailbox
+ * @property {number[]} [RawPayload] An array of bytes as decimal numbers (0..255)
+ *  <br>&nbsp;&nbsp;present if requested in the get_return_messages operation
+ * @property {Message} [Payload] A JSON data structure
+ *  <br>&nbsp;&nbsp;present if the MGS has decoded the raw payload using a Message Definition File on the Mailbox
  */
+
 /**
  * A filter to apply to the get_return_messages operation when retrieving Mobile-Originated messages
  * @typedef {Object} ReturnMessageFilter
- * @property {string} [start_utc] High water mark timestamp format YYYY-MM-DD hh:mm:ss, required if from_id is not present, ignored if from_id is present
- * @property {number} [from_id] High water mark unique ReturnMessage.ID, required if start_utc is not present
- * @property {string} [end_utc] Optional end time if start_utc is used, to return a range of messages (ratehr than all since start_utc)
+ * @property {string} [start_utc] High water mark timestamp format YYYY-MM-DD hh:mm:ss
+ *  <br>&nbsp;&nbsp;required if from_id is not present, ignored if from_id is present
+ * @property {number} [from_id] High water mark unique ReturnMessage.ID
+ *  <br>&nbsp;&nbsp;required if start_utc is not present
+ * @property {string} [end_utc] Optional end time if start_utc is used, to return a range of messages 
+ *  rather than all since start_utc
  * @property {string} [mobile_id] Optional filter to retrieve only messages for a single terminal/modem
- * @property {boolean} [include_raw_payload] A flag indicating if ReturnMessage.RawPayload should be returned
- * @property {boolean} [include_type] A flag indicating if Fields should include the Type property
+ * @property {boolean} [include_raw_payload=true] A flag indicating if ReturnMessage.RawPayload should be returned
+ * @property {boolean} [include_type=true] A flag indicating if Fields should include the Type property
  */
-
 /**
  * The JSON structure response to the get_return_messages operation
  * @typedef {Object} GetReturnMessagesResponse
@@ -222,32 +224,6 @@ async function getErrorDefinitions() {
  * @property {(ReturnMessage[]|null)} Messages An array of message objects or null if none meet the filter/range criteria
  */
 /**
- * Returns a Promise for an array of ReturnMessage
- * @param {ApiV1Auth} auth Mailbox authentication parameters
- * @param {ReturnMessageFilter} filter Filter to apply for Mobile-Originated message retrieval
- * @returns {GetReturnMessagesResponse} Array of Mobile-Originated messages/metadata
- */
-function get_return_messages(auth, filter) {
-    return new Promise(function(resolve, reject){
-        var options = {
-            uri: API_URL + getUri('get_return_messages.json/', auth, filter),
-        };
-        request.get(options, function(err, resp, body) {
-            if (err) {
-                logger.error(obfuscatePassword(options.uri) + ' returned ' + err);
-                reject(err);
-            } else {
-                var result = JSON.parse(body);
-                var messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
-                var moreMessages = result.More ? ' more messages from ' + result.NextStartID : '';
-                logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId + moreMessages);
-                resolve(result);
-            }
-        })
-    })
-}
-
-/**
  * Returns a response object containing retrieved messages that match the 
  * @param {ApiV1Auth} auth Mailbox authentication parameters
  * @param {(string|number)} highWaterMark The time 'YYYY-MM-DD hh:mm:ss' or unique ReturnMessage.ID to retrieve from
@@ -255,7 +231,7 @@ function get_return_messages(auth, filter) {
  * @param {string} [mobileId] An optional filter to return only messages from the specified unique ID
  * @returns {GetReturnMessagesResponse} A response object
  */
-async function getMobileOriginated(auth, highWaterMark, endTime, mobileId) {
+async function getMobileOriginatedMessages(auth, highWaterMark, endTime, mobileId) {
     var filter = {
         include_raw_payload: true,
         include_type: true,
@@ -271,7 +247,26 @@ async function getMobileOriginated(auth, highWaterMark, endTime, mobileId) {
     if (typeof(mobileId) === 'string') {
         filter.mobile_id = mobileId;
     }
-    var response = await get_return_messages(auth, filter);
+
+    var promise = new Promise((resolve, reject) => {
+        var options = {
+            uri: apiUrl + getUri('get_return_messages.json/', auth, filter),
+        };
+        request.get(options, function(err, resp, body) {
+            if (err) {
+                logger.error(obfuscateLog(options.uri) + ' returned ' + err);
+                reject(err);
+            } else {
+                var result = JSON.parse(body);
+                var messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
+                var moreMessages = result.More ? ' more messages from ' + result.NextStartID : '';
+                logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId + moreMessages);
+                resolve(result);
+            }
+        });
+    });
+
+    var response = await promise;
     return response;
 }
 
@@ -298,22 +293,24 @@ async function getMobileOriginated(auth, highWaterMark, endTime, mobileId) {
  * @property {number} ErrorID An error code returned by the system (0 = no errors)
  * @property {ForwardSubmission[]} Submissions An array of Mobile-Terminated messages submitted in the operation
  */
-
 /**
- * Submits Mobile-Terminated messages for transmitting over the network
- * @param {ApiV1Auth} auth Mailbox authentication credentials
- * @param {ForwardMessage[]} messages An array of Mobile-Terminated messages
- * @returns {SubmitForwardMessagesResult} A result object
+ * Submits Mobile-Terminated message(s) to remote modem(s)
+ * @param {ApiV1Auth} auth Mailbox authentication
+ * @param {ForwardMessage[]} messages An array of messages
+ * @returns {Promise<SubmitForwardMessagesResult} An error code and metadata
  */
-function submit_messages(auth, messages) {
-    return new Promise(function(resolve, reject){
+async function submitMobileTerminatedMessages(auth, messages) {
+    
+    let promise = new Promise((resolve, reject) => {
         var options = {
-            uri: API_URL + 'submit_messages.json/',
+            uri: apiUrl + 'submit_messages.json/',
             body: {
                 accessID: auth.accessId,
                 password: auth.password,
                 messages: messages
-            }
+
+            },
+            json: true,
         };
         request.post(options, function(err, resp, body) {
             if (err) {
@@ -321,52 +318,47 @@ function submit_messages(auth, messages) {
                 logger.error(options.uri + ' returned ' + err);
                 reject(err);
             } else {
-                var result = JSON.parse(body).SubmitForwardMessages_JResult;
-                var messagesSubmittedCount = result.Submissions !== null ? result.Submissions.length : 0;
-                logger.debug(messagesSubmittedCount + ' messages sent to Mailbox ' + auth.accessId);
-                resolve(result);
+                if (resp.statusCode === 200) {
+                    var result = body.SubmitForwardMessages_JResult;
+                    var messagesSubmittedCount = result.Submissions !== null ? result.Submissions.length : 0;
+                    logger.debug(messagesSubmittedCount + ' messages sent to Mailbox ' + auth.accessId);
+                    resolve(result);
+                } else {
+                    reject('statusCode: ' + resp.statusCode);
+                }
             }
-        })
-    })
+        });
+    });
+    
+    var response = await promise;
+    return response;
 }
 
+/**
+ * @typedef {Object} ForwardMessageRecord
+ * @property {string} DestinationID A unique Mobile ID or Broadcast ID to send the message to
+ * @property {number[]} RawPayload Must be present if Payload is not present, an array of bytes as decimal values (0..255)
+ * @property {Message} Payload Must be present if RawPayload is not present, implies that a Message Definition File is used on the Mailbox
+ * @property {number} ID A unique number assigned by the MGS upon submission (get_forward_messages only)
+ * @property {string} CreateUTC A timestamp assigned by the MGS upon submission (get_forward_messages only)
+ * @property {string} StatusUTC A timestamp of the most recent State (get_forward_messages only)
+ * @property {number} State The current state of the message (get_forward_messages only)
+ * @property {number} ErrorID An error code for the record retrieval
+ * @property {boolean} IsClosed An indicator if the message is completed/failed (get_forward_messages only)
+ * @property {number} ReferenceNumber System generated (get_forward_messages only)
+ */
 /**
  * @typedef {Object} GetForwardMessagesResult
  * @property {number} ErrorID An error code for the get_forward_messages operation
- * @property {ForwardMessage[]} Messages An array of messages
+ * @property {ForwardMessageRecord[]} Messages An array of messages
  */
-/**
- * Retrieves submitted Mobile-Terminated messages by ID
- * @param {ApiV1Auth} auth Mailbox authentication
- * @param {string} fwIds Comma-separated list of ForwardMessageID
- * @returns {GetForwardMessagesResult} The retrieved message objects
- */
-function get_forward_messages(auth, fwIds) {
-    return new Promise(function(resolve, reject){
-        var options = {
-            uri: API_URL + getUri('get_forward_messages.json/', auth, { fwIDs: fwIds }),
-        };
-        request.get(options, function(err, resp, body) {
-            if (err) {
-                logger.error(obfuscatePassword(options.uri) + ' returned ' + err);
-                reject(err);
-            } else {
-                var result = JSON.parse(body);
-                var messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
-                logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId);
-                resolve(result);
-            }
-        })
-    })
-}
-
 /**
  * Retrieves Mobile-Terminated messages submitted, by ID
  * @param {ApiV1Auth} auth Mailbox authentication
  * @param {(number|number[])} ids An array of unique ForwardMessageID numbers
  * @returns {GetForwardMessagesResult} The requested IDs and/or error code
  */
-async function getMobileTerminated(auth, ids) {
+async function getMobileTerminatedMessages(auth, ids) {
     var fwIds = '';
     if (typeof(ids) === 'number') {
         ids = [ids];
@@ -375,22 +367,38 @@ async function getMobileTerminated(auth, ids) {
         if (i > 0) {
             fwIds += ',';
         }
-        fwIds += toString(ids[i]);
+        fwIds += ids[i];
     }
-    var response = await get_forward_messages(auth, fwIds);
+
+    var promise = new Promise(function(resolve, reject){
+        var options = {
+            uri: apiUrl + getUri('get_forward_messages.json/', auth, { fwIDs: fwIds }),
+        };
+        request.get(options, function(err, resp, body) {
+            if (err) {
+                logger.error(obfuscateLog(options.uri) + ' returned ' + err);
+                reject(err);
+            } else {
+                var result = JSON.parse(body);
+                var messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
+                logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId);
+                resolve(result);
+            }
+        });
+    });
+
+    var response = await promise;
     return response;
 }
 
-/**
- * Submits Mobile-Terminated message(s) to remote modem(s)
- * @param {ApiV1Auth} auth Mailbox authentication
- * @param {ForwardMessage[]} messages An array of messages
- */
-async function submitMobileTerminated(auth, messages) {
-    var response = await submit_messages(auth, messages);
-    return response;
-}
-
+const ForwardMessageStates = [
+    'SUBMITTED',
+    'RECEIVED',
+    'ERROR',
+    'DELIVERY_FAILED',
+    'TIMED_OUT',
+    'CANCELLED'
+];
 /**
  * @typedef {Object} ForwardStatus
  * @property {number} ErrorID An error code for the Mobile-Terminated message
@@ -404,60 +412,28 @@ async function submitMobileTerminated(auth, messages) {
  * @typedef {Object} GetForwardStatusesResult
  * @property {number} ErrorID An error code returned for the get_forward_statuses operation
  * @property {boolean} More An indicator if additional statuses are available for retrieval
- * @property {string} NextStartUTC The timestamp 'YYYY-MM-DD hh:mm:ss' for the next retrieval
+ * @property {(string|null)} NextStartUTC The timestamp 'YYYY-MM-DD hh:mm:ss' for the next retrieval, null if More is false
  * @property {(ForwardStatus[]|null)} Statuses An array of statuses if any were retrieved, otherwise null
  */
 /**
- * @typedef {Object} ForwardStatusFilter
- * @property {string} fwIDs A list of comma-separated unique ForwardMessageID numbers being queried
- * @property {string} [start_utc] The timestamp 'YYYY-MM-DD hh:mm:ss' for the start of retrieval
- * @property {string} [end_utc] The timestamp 'YYYY-MM-DD hh:mm:ss' for the end of retrieval
- */
-
-/**
- * Retrieves Mobile-Terminated message statuses by ID or time range
- * @param {ApiV1Auth} auth Mailbox authentication
- * @param {ForwardStatusFilter} filter Filter of IDs and/or time range to retrieve
- * @returns {GetForwardStatusesResult} The operation result
- */
-function get_forward_statuses(auth, filter) {
-    return new Promise(function(resolve, reject){
-        var options = {
-            uri: API_URL + getUri('get_forward_statuses.json/', auth, filter),
-        };
-        request.get(options, function(err, resp, body) {
-            if (err) {
-                logger.error(obfuscatePassword(options.uri) + ' returned ' + err);
-                reject(err);
-            } else {
-                var result = JSON.parse(body);
-                var messagesStatusesCount = result.Statuses !== null ? result.Statuses.length : 0;
-                logger.debug(messagesStatusesCount + ' statuses retrieved from Mailbox ' + auth.accessId);
-                resolve(result);
-            }
-        })
-    })
-}
-
-/**
  * Retrieves Mobile-Terminated message statuses by ID and optional time range
  * @param {ApiV1Auth} auth Mailbox authentication
- * @param {(number|number[])} ids 
- * @param {string} startTime 
- * @param {string} endTime 
+ * @param {(number|number[])} [ids] An ID or array of IDs to retrieve status for
+ * @param {string} startTime The timestamp 'YYYY-MM-DD hh:mm:ss' for the start of retrieval
+ * @param {string} endTime The timestamp 'YYYY-MM-DD hh:mm:ss' for the end of retrieval
  * @returns {GetForwardStatusesResult} result
  */
 async function getMobileTerminatedStatuses(auth, ids, startTime, endTime) {
     var filter = {};
     if (typeof(ids) === 'number') {
         filter.fwIDs = toString(ids);
-    } else if (typeof(ids) === 'object') {
+    } else if (Array.isArray(ids)) {
         var fwIDs = '';
         for (var i = 0; i < ids.length; i++) {
             if (i > 0) {
                 fwIDs += ',';
             }
-            fwIDs += toString(ids[i]);
+            fwIDs += ids[i];
         }
         filter.fwIDs = fwIDs;
     }
@@ -467,17 +443,94 @@ async function getMobileTerminatedStatuses(auth, ids, startTime, endTime) {
     if (typeof(endTime) === 'string') {
         filter.end_utc = endTime;
     }
-    var response = await get_forward_statuses(auth, filter);
+
+    let promise = new Promise((resolve, reject) => {
+        var options = {
+            uri: apiUrl + getUri('get_forward_statuses.json/', auth, filter),
+        };
+        request.get(options, function(err, resp, body) {
+            if (err) {
+                logger.error(obfuscateLog(options.uri) + ' returned ' + err);
+                reject(err);
+            } else {
+                var result = JSON.parse(body);
+                var messagesStatusesCount = result.Statuses !== null ? result.Statuses.length : 0;
+                logger.debug(messagesStatusesCount + ' statuses retrieved from Mailbox ' + auth.accessId);
+                resolve(result);
+            }
+        })
+    });
+
+    var response = await promise;
     return response;
 }
 
+/**
+ * @typedef {Object} MobileIdList
+ * @property {number} ErrorID An error code for the get_mobiles_paged operation
+ * @property {MobileInformation[]} Mobiles A list of Mobile objects
+ */
+/**
+ * @typedef {Object} MobileInformation
+ * @property {string} ID The unique Mobile ID
+ * @property {string} Description A description as provisioned on the MGS
+ * @property {string} LastRegistrationUTC A timestamp format 'YYYY-MM-DD hh:mm:ss' of the last Registration message
+ * @property {string} RegionName The region/beam on which the last Registration message was received
+ */
+/**
+ * 
+ * @param {ApiV1Auth} auth Mailbox authentication
+ * @param {Object} [filter] Filters for ID (next ID for sequential query) and size
+ * @param {string} [filter.mobileId] Set the only/first Mobile ID to query, if present
+ * @param {number} [filter.pageSize] Maximum number of results to return (1..1000) defaults to 1000
+ * @returns {MobileIdList} A response list with error code
+ */
+async function getMobileIds(auth, filter) {
+    let promise = new Promise((resolve, reject) => {
+        var opFilter = {
+            page_size: 1000,
+        };
+        if (filter) {
+            if (typeof(filter.mobileId) === 'string') {
+                opFilter.since_mobile = filter.mobileId;
+            }
+            if (typeof(filter.pageSize) === 'number' 
+                && filter.pageSize >= 1 && filter.pageSize <= 1000) {
+                opFilter.page_size = filter.pageSize;
+            }
+        }
+        var options = {
+            uri: apiUrl + getUri('get_mobiles_paged.json/', auth, opFilter),
+        };
+        request.get(options, function(err, resp, body) {
+            if (err) {
+                logger.error(obfuscateLog(options.uri) + ' returned ' + err);
+                reject(err);
+            } else {
+                var result = JSON.parse(body);
+                if (result.Mobiles) {
+                    var mobilesCount = result.Mobiles !== null ? result.Mobiles.length : 0;
+                    var moreMobiles = result.More ? ' more messages from ' + result.NextStartID : '';
+                    logger.debug(mobilesCount + ' Mobile IDs retrieved from Mailbox ' + auth.accessId + moreMobiles);
+                }
+                resolve(result);
+            }
+        })
+    });
+    //TODO: should be a More flag to indicate when done?
+    let result = await promise;
+    return result;
+}
+
 module.exports = {
+    apiUrl,
     getMgsVersion,
     getUtcTime,
     getErrorName,
     getErrorDefinitions,
-    getMobileOriginated,
-    submitMobileTerminated,
+    getMobileOriginatedMessages,
+    submitMobileTerminatedMessages,
     getMobileTerminatedStatuses,
-    getMobileTerminated,
+    getMobileTerminatedMessages,
+    getMobileIds,
 };

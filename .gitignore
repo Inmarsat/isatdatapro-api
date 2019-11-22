@@ -3,6 +3,7 @@
 node_modules/*
 .vscode/*
 config/mailboxes.js
-logs/
+logs/*
 
 
+config/mailboxes.js
