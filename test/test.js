@@ -3,7 +3,7 @@
 const chai = require('chai');
 chai.config.includeStack = false;
 const expect = chai.expect;
-const idpApi = require('../index');
+const idpApi = require('../lib');
 const mailboxes = require('../config/mailboxes').credentials;
 const testTerminals = require('../config/mailboxes').testTerminals;
 const modemMessages = require('./modem-messages');
