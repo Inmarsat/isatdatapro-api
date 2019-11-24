@@ -87,17 +87,60 @@ async function getIdpVersion() {
   return mgsVersion;
 }
 
+/**
+ * Returns an IDP message gateway formatted timestamp, defaults to 1970-01-01 00:00:00
+ * @param {Object} date A Javascript Date object
+ * @returns {string} An IDP message gateway formatted timestamp 'YYYY-MM-DD hh:mm:ss'
+ */
 function dateToIdpTime(date) {
-  let mgsTime = '1970-01-01 00:00:00';
-  if (typeof (date) === 'Date') {
-    mgsTime = date.toISOString().split('.')[0].replace('T', ' ');
+  let idpTime = '1970-01-01 00:00:00';
+  if (date instanceof Date) {
+    idpTime = date.toISOString().split('.')[0].replace('T', ' ');
   }
-  return mgsTime;
+  return idpTime;
 }
 
-function idpTimeToDate(mgsTime) {
-  let date = new Date(mgsTime);
-  return date;
+/**
+ * Returns true if the timestamp is IDP format
+ * @param {string} timestamp A candidate IDP message gateway formatted timestamp 'YYYY-MM-DD hh:mm:ss'
+ * @returns {boolean}
+ */
+function validateIdpTimeFormat(timestamp) {
+  let valid = false;
+  if (typeof(timestamp) === 'string') {
+    const timestampParts = timestamp.split(' ');
+    const dateParts = timestampParts.split('-');
+    const timeParts = timestampParts.split(':');
+    if (dateParts.length === 3 && timeParts.length === 3) {
+      const year = Number(dateParts[0]);
+      const month = Number(dateParts[1]);
+      const day = Number(dateParts[2]);
+      const hour = Number(timeParts[0]);
+      const minute = Number(timeParts[1]);
+      const second = Number(timeParts[2]);
+      if (1970 <= year <= 9999 && 1 <= month <= 12 && 1 <= day <= 31 
+          && 0 <= hour <= 23 && 0 <= minute <= 59 && 0 <= second <= 59) {
+        //TODO: validate day of month including leap year etc.
+        valid = true;
+      }
+  
+    }
+  }
+  return valid;
+}
+
+/**
+ * Returns a Javascript Date object by converting an IDP message gateway formatted timestamp
+ * @param {string} idpTime An IDP message gateway formatted timestamp 'YYYY-MM-DD hh:mm:ss'
+ * @returns {Object} Javascript Date object
+ * @throws {Error} If the passed in value is not a valid IDP datestamp
+ */
+function idpTimeToDate(idpTime) {
+  if (validateIdpTimeFormat(idpTime)) {
+    return new Date(idpTime);
+  } else {
+    throw new Error('Value must be a valid IDP datestamp yyyy-mm-dd HH:MM:SS');
+  }
 }
 
 /**
@@ -451,8 +494,17 @@ const ForwardMessageStates = [
   'ERROR',
   'DELIVERY_FAILED',
   'TIMED_OUT',
-  'CANCELLED'
+  'CANCELLED',
 ];
+
+/**
+ * A filter for requesting Mobile-Terminated message(s) states
+ * @typedef {Object} ForwardStatusFilter 
+ * @property {(number|number[])} [ids] Unique ForwardMessage.ID(s) to query, must be present if startTimeUtc is not
+ * @property {string} [startTimeUtc] The UTC timestamp 'YYYY-MM-DD hh:mm:ss' for the start of retrieval,
+ *    must be present if ids is not
+ * @property {string} [endTimeUtc] The UTC timestamp 'YYYY-MM-DD hh:mm:ss' for the end of retrieval
+ */
 
 /**
  * Metadata for a submitted Mobile-Terminated message state
@@ -476,18 +528,19 @@ const ForwardMessageStates = [
 
 /**
  * Retrieves Mobile-Terminated message state/status by ID(s) and optional time range
+ * NOTE: API should support ids as optional if startTimeUtc is specified
  * @param {ApiV1Auth} auth Mailbox authentication
- * @param {(number|number[])} [ids] An ID or array of IDs to retrieve status for
- * @param {string} startTime The timestamp 'YYYY-MM-DD hh:mm:ss' for the start of retrieval
- * @param {string} endTime The timestamp 'YYYY-MM-DD hh:mm:ss' for the end of retrieval
+ * @param {ForwardStatusFilter} filter A set of filter criteria for the query
  * @returns {Promise<GetForwardStatusesResult} result
  */
-async function getMobileTerminatedStatuses(auth, ids, startTime, endTime) {
-  let apiFilter = {
-    fwIDs: getFwIdsString(ids),
-  };
-  if (typeof (startTime) === 'string') apiFilter.start_utc = startTime;
-  if (typeof (endTime) === 'string') apiFilter.end_utc = endTime;
+async function getMobileTerminatedStatuses(auth, filter) {
+  let apiFilter = {};
+  if (filter.ids === null && filter.startTimeUtc === null) {
+    throw new Error('getMobileTerminatedStatuses must contain at least one of ids or startTimeUtc');
+  }
+  if (filter.ids !== null) apiFilter.fwIDs = getFwIdsString(filter.ids);
+  if (typeof (filter.startTimeUtc) === 'string') apiFilter.start_utc = filter.startTimeUtc;
+  if (typeof (filter.endTimeUtc) === 'string') apiFilter.end_utc = filter.endTimeUtc;
 
   const promise = new Promise((resolve, reject) => {
     const options = {
@@ -524,11 +577,12 @@ async function getMobileTerminatedStatuses(auth, ids, startTime, endTime) {
  * @returns {Promise<CancelForwardMessagesResult}
  */
 async function cancelMobileTerminatedMessages(auth, ids) {
-  const fwIds = getFwIdsString(ids);
+  let apiFilter = {};
+  if (ids !== null) apiFilter.fwIds = getFwIdsString(ids);
 
   const promise = new Promise(function (resolve, reject) {
     const options = {
-      uri: apiUrl + getUri('submit_cancelations.json/', auth, { fwIDs: fwIds }),
+      uri: apiUrl + getUri('submit_cancelations.json/', auth, apiFilter),
     };
     request.get(options, function (err, resp, body) {
       if (err) {
@@ -664,4 +718,6 @@ module.exports = {
   getMobileTerminatedMessages,
   getMobileIds,
   getBroadcastIds,
+  dateToIdpTime,
+  idpTimeToDate,
 };

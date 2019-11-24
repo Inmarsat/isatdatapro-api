@@ -240,7 +240,7 @@ const configReply = {
  * @returns {number} a 'ping' message-compatible timestamp modulo 65535
  */
 function pingRequestTime(timestamp) {
-    const d;
+    let d;
     if (typeof(timestamp) === 'undefined') {
         d = new Date();
     } else {
