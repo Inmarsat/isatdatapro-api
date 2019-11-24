@@ -1,6 +1,11 @@
+/**
+ * Modem message examples used for testing
+ * @module test/modem-messages
+ */
+
 'use strict';
 
-var modemRegistration = {
+const modemRegistration = {
     Payload: {
         //IsForward: false,
         Name: 'modemRegistration',
@@ -25,7 +30,7 @@ var modemRegistration = {
     //RawPayload: [0, 0, ...]
 };
 
-var beamRegistration = {
+const beamRegistration = {
     //TODO: confirm Name, Fields
     Payload: {
         //IsForward: false,
@@ -40,7 +45,7 @@ var beamRegistration = {
     //RawPayload: [0, 1, ]
 };
 
-var protocolError = {
+const protocolError = {
     Payload: {
         //IsForward: false,
         Name: 'protocolError',
@@ -62,7 +67,7 @@ const ModemResetTypes = [
     'terminalModemFlush',   // asserts 'host' reset pin on supported modems and clears modem queue
 ];
 
-var resetRequest = {
+const resetRequest = {
     Payload: {
         IsForward: true,
         Name: 'reset',
@@ -106,7 +111,7 @@ function getWakeupPeriodSeconds(wakeupPeriod) {
     }
 }
 
-var setSleepSchedule = {
+const setSleepSchedule = {
     Payload: {
         IsForward: true,
         Name: 'setSleepSchedule',
@@ -119,7 +124,7 @@ var setSleepSchedule = {
     //RawPayload: [0, 70, ]
 };
 
-var sleepScheduleChange = {
+const sleepScheduleChange = {
     Payload: {
         //IsForward: false,
         Name: 'sleepSchedule',
@@ -134,7 +139,7 @@ var sleepScheduleChange = {
     //RawPayload: [0, 70, ]
 };
 
-var muteRequest = {
+const muteRequest = {
     Payload: {
         IsForward: true,
         Name: 'muteTx',
@@ -146,7 +151,7 @@ var muteRequest = {
     }
 };
 
-var locationRequest = {
+const locationRequest = {
     Payload: {
         IsForward: true,
         Name: 'requestPosition',
@@ -164,16 +169,16 @@ var locationRequest = {
  * @returns {string} Date object
  */
 function timestampFromDayMinute(dayOfMonth, minuteOfDay) {
-    var dateObj = new Date();
-    var month = dateObj.getUTCMonth();   //months from 0-11
-    var year = dateObj.getUTCFullYear();
-    var hour = minuteOfDay / 60;
-    var minute = minuteOfDay % 60;
-    var tsDate = new Date(year, month, dayOfMonth, hour, minute);
+    const dateObj = new Date();
+    const month = dateObj.getUTCMonth();   //months from 0-11
+    const year = dateObj.getUTCFullYear();
+    const hour = minuteOfDay / 60;
+    const minute = minuteOfDay % 60;
+    const tsDate = new Date(year, month, dayOfMonth, hour, minute);
     return tsDate;
 }
 
-var locationReply = {
+const locationReply = {
     Payload: {
         //IsForward: false,
         Name: 'position',
@@ -193,7 +198,7 @@ var locationReply = {
     //RawPayload = [0, 72, ...]
 };
 
-var configRequest = {
+const configRequest = {
     Payload: {
         IsForward: true,
         Name: 'config',
@@ -204,7 +209,7 @@ var configRequest = {
     RawPayload: [0, 97]
 };
 
-var configReply = {
+const configReply = {
     Payload: {
         //IsForward: false,
         Name: 'config',
@@ -235,7 +240,7 @@ var configReply = {
  * @returns {number} a 'ping' message-compatible timestamp modulo 65535
  */
 function pingRequestTime(timestamp) {
-    var d;
+    const d;
     if (typeof(timestamp) === 'undefined') {
         d = new Date();
     } else {
@@ -244,7 +249,7 @@ function pingRequestTime(timestamp) {
     return (d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds()) % 65535;
 }
 
-var pingModemRequest = {
+const pingModemRequest = {
     Payload: {
         IsForward: true,
         Name: 'mobilePing',
@@ -257,7 +262,7 @@ var pingModemRequest = {
     //RawPayload: [0, 112, 0, 0]
 };
 
-var pingModemReply = {
+const pingModemReply = {
     Payload: {
         IsForward: false,
         Name: 'mobilePing',
@@ -271,7 +276,7 @@ var pingModemReply = {
     //RawPayload: [0, 112, ...]
 };
 
-var pingNetworkRequest = {
+const pingNetworkRequest = {
     Payload: {
         //IsForward: false,
         //Name: 'networkPing',
@@ -282,7 +287,7 @@ var pingNetworkRequest = {
     RawPayload: [0, 113]
 };
 
-var lastRxInfoRequest = {
+const lastRxInfoRequest = {
     Payload: {
         IsForward: true,
         Name: 'lastRxMetrics',
@@ -293,7 +298,7 @@ var lastRxInfoRequest = {
     RawPayload: [0, 98]
 };
 
-var lastRxInfoReply = {
+const lastRxInfoReply = {
     Payload: {
         //IsForward: false,
         Name: 'lastRxMetrics',
@@ -327,7 +332,7 @@ const MetricsPeriods = [
     'LastFullDay',
 ];
 
-var rxMetricsRequest = {
+const rxMetricsRequest = {
     Payload: {
         IsForward: true,
         Name: 'rxMetrics',
@@ -340,7 +345,7 @@ var rxMetricsRequest = {
     //RawPayload: [0, 99, 2]
 };
 
-var rxMetricsReply = {
+const rxMetricsReply = {
     Payload: {
         //IsForward: false,
         Name: 'rxMetrics',
@@ -359,7 +364,7 @@ var rxMetricsReply = {
     //RawPayload: [0, 99, ]
 };
 
-var txMetricsRequest = {
+const txMetricsRequest = {
     Payload: {
         IsForward: true,
         Name: 'txMetrics',
@@ -372,7 +377,7 @@ var txMetricsRequest = {
     //RawPayload: [0, 100, 2]
 };
 
-var txMetricsReply = {
+const txMetricsReply = {
     Payload: {
         //IsForward: false,
         Name: 'txMetrics',
@@ -406,7 +411,7 @@ var txMetricsReply = {
     }
 };
 
-var broadcastIdsRequest = {
+const broadcastIdsRequest = {
     Payload: {
         IsForward: true,
         Name: 'broadcastIDs',
@@ -417,7 +422,7 @@ var broadcastIdsRequest = {
     RawPayload: [0, 115]
 };
 
-var broadcastIdsReply = {
+const broadcastIdsReply = {
     Payload: {
         //IsForward: false,
         Name: 'broadcastIDs',
@@ -446,7 +451,7 @@ var broadcastIdsReply = {
     },
 };
 
-var skywaveLockedModem = {
+const skywaveLockedModem = {
     Payload: {
         //IsForward: false,
         //Name: 'undefined',
