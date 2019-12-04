@@ -168,6 +168,37 @@ async function getIdpTime() {
 }
 
 /**
+ * Returns the JSON object with camelized keys e.g. {"ErrorID": 0} becomes {"errorId": 0}
+ * @param {Object} jsonObject A JSON object with non-camelized keys e.g. ErrorID
+ * @returns {Object} The object with its keys camelCase
+ */
+function camelizeJsonKeys(jsonObject) {
+  let newJsonObject = {};
+
+  function camelize(str) {
+    return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
+      return index == 0 ? match.toLowerCase() : match.toUpperCase();
+    });
+  }
+
+  for (let key in jsonObject) {
+    // skip loop if the property is from prototype
+    if (!jsonObject.hasOwnProperty(key)) continue;
+
+    let obj = jsonObject[key];
+    for (let prop in obj) {
+        // skip loop if the property is from prototype
+        if (!obj.hasOwnProperty(prop)) continue;
+
+        let newKey = camelize(key);
+        newJsonObject[newKey] = prop;
+    }
+  }
+  return newJsonObject;
+}
+
+/**
  * Describes an error code returned by the IDP Messaging API
  * @typedef {Object} ErrorDefinition
  * @property {number} ID The unique error number
