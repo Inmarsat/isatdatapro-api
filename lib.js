@@ -65,7 +65,7 @@ function obfuscateLog(debugMessage) {
 
 /**
  * Returns the Message Gateway System software version details
- * @returns {Promise<string} IDP Message Gateway System software version
+ * @returns {Promise<string>} IDP Message Gateway System software version
  */
 async function getIdpVersion() {
   const promise = new Promise((resolve, reject) => {
@@ -145,7 +145,7 @@ function idpTimeToDate(idpTime) {
 
 /**
  * Returns current UTC time at the MGS
- * @returns {Promise<string} UTC time formatted as 'YYYY-MM-DD hh:mm:ss'
+ * @returns {Promise<string>} UTC time formatted as 'YYYY-MM-DD hh:mm:ss'
  */
 async function getIdpTime() {
   const promise = new Promise(function (resolve, reject) {
@@ -169,6 +169,7 @@ async function getIdpTime() {
 
 /**
  * Returns the JSON object with camelized keys e.g. {"ErrorID": 0} becomes {"errorId": 0}
+ * @private
  * @param {Object} jsonObject A JSON object with non-camelized keys e.g. ErrorID
  * @returns {Object} The object with its keys camelCase
  */
@@ -208,7 +209,7 @@ function camelizeJsonKeys(jsonObject) {
 
 /**
  * Returns an array of error definitions based on an API error code
- * @returns {Promise<ErrorDefinition[]} An array of error definitions
+ * @returns {Promise<ErrorDefinition[]>} An array of error definitions
  */
 async function getErrorDefinitions() {
   const promise = new Promise((resolve, reject) => {
@@ -233,7 +234,7 @@ async function getErrorDefinitions() {
 /**
  * Returns a descriptive error name based on an API error code
  * @param {(string|number)} errorId The ErrorID number returned by the API operation
- * @returns {Promise<string} An error name/description or 'UNDEFINED'
+ * @returns {Promise<string>} An error name/description or 'UNDEFINED'
  */
 async function getErrorName(errorId) {
   let errorName = 'UNDEFINED';
@@ -247,7 +248,8 @@ async function getErrorName(errorId) {
 }
 
 /**
- * A data structure containing various content and metadata within a message
+ * A data structure containing various content and metadata within a message,
+ * present if a codec is provisioned on the Mailbox
  * @typedef {Object} Field
  * @property {string} Name A descriptive name of the field, usually in camelCase notation
  * @property {string} [Type] Supported types
@@ -363,19 +365,23 @@ async function getMobileOriginatedMessages(auth, filter) {
   return response;
 }
 
-/** Enumerated type for TerminalWakeupPeriod */
-const WakeupPeriods = [
-  'None',
-  'Seconds30',
-  'Seconds60',
-  'Minutes3',
-  'Minutes10',
-  'Minutes30',
-  'Minutes60',
-  'Minutes2',
-  'Minutes5',
-  'Minutes15',
-];
+/** 
+ * Enumerated type for TerminalWakeupPeriod 
+ * @readonly
+ * @enum {number}
+*/
+const WakeupPeriods = {
+  'None': 0,
+  'Seconds30': 1,
+  'Seconds60': 2,
+  'Minutes3': 3,
+  'Minutes10': 4,
+  'Minutes30': 5,
+  'Minutes60': 6,
+  'Minutes2': 7,
+  'Minutes5': 8,
+  'Minutes15': 9,
+};
 
 /**
  * Data structure for a Mobile-Terminated (aka To-Mobile aka Forward) message
@@ -410,7 +416,7 @@ const WakeupPeriods = [
  * Submits Mobile-Terminated message(s) to remote modem(s)
  * @param {ApiV1Auth} auth Mailbox authentication
  * @param {ForwardMessage[]} messages An array of messages
- * @returns {Promise<SubmitForwardMessagesResult} An error code and metadata
+ * @returns {Promise<SubmitForwardMessagesResult>} An error code and metadata
  */
 async function submitMobileTerminatedMessages(auth, messages) {
   const promise = new Promise((resolve, reject) => {
@@ -491,7 +497,7 @@ function getFwIdsString(ids) {
 * Retrieves Mobile-Terminated messages submitted, by ID(s)
 * @param {ApiV1Auth} auth Mailbox authentication
 * @param {(number|number[])} ids An array of unique ForwardMessageID numbers
-* @returns {Promise<GetForwardMessagesResult} The requested IDs and/or error code
+* @returns {Promise<GetForwardMessagesResult>} The requested IDs and/or error code
 */
 async function getMobileTerminatedMessages(auth, ids) {
   const fwIds = getFwIdsString(ids);
@@ -562,7 +568,7 @@ const ForwardMessageStates = [
  * NOTE: API should support ids as optional if startTimeUtc is specified
  * @param {ApiV1Auth} auth Mailbox authentication
  * @param {ForwardStatusFilter} filter A set of filter criteria for the query
- * @returns {Promise<GetForwardStatusesResult} result
+ * @returns {Promise<GetForwardStatusesResult>} result
  */
 async function getMobileTerminatedStatuses(auth, filter) {
   let apiFilter = {};
@@ -605,7 +611,7 @@ async function getMobileTerminatedStatuses(auth, filter) {
  * Requests cancellation of specific Mobile-Terminated message(s)
  * @param {ApiV1Auth} auth Mailbox authenticataion
  * @param {(number|number[])} ids Message id(s) to be cancelled
- * @returns {Promise<CancelForwardMessagesResult}
+ * @returns {Promise<CancelForwardMessagesResult>}
  */
 async function cancelMobileTerminatedMessages(auth, ids) {
   let apiFilter = {};
@@ -654,7 +660,7 @@ async function cancelMobileTerminatedMessages(auth, ids) {
  * @param {Object} [filter] Filters for ID (next ID for sequential query) and size
  * @param {string} [filter.mobileId] Set the only/first Mobile ID to query, if present
  * @param {number} [filter.pageSize] Maximum number of results to return (1..1000) defaults to 1000
- * @returns {Promise<MobileIdList} A response list with error code
+ * @returns {Promise<MobileIdList>} A response list with error code
  */
 async function getMobileIds(auth, filter) {
   const promise = new Promise((resolve, reject) => {
@@ -710,7 +716,7 @@ async function getMobileIds(auth, filter) {
 /**
  * Returns the list of Broadcast IDs associated with the Mailbox
  * @param {ApiV1Auth} auth Mailbox authentication
- * @returns {Promise<BroadcastIddList} A response list with error code
+ * @returns {Promise<BroadcastIddList>} A response list with error code
  */
 async function getBroadcastIds(auth) {
   const promise = new Promise((resolve, reject) => {

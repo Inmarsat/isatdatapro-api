@@ -4,3 +4,5 @@ node_modules/*
 .vscode/*
 config/mailboxes.js
 logs/*
+docs/make*
+docs/Make*
