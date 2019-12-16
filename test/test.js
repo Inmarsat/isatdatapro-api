@@ -273,7 +273,7 @@ describe('#cancelMobileTerminatedMessages()', function() {
         //console.log('cancelMobileTerminatedMessages RESULT: ' + JSON.stringify(result, null, 2));
         expect(result)
           .to.be.an('Object')
-          .that.includes.all.keys('ErrorID', 'Messages');
+          .that.includes.all.keys('ErrorID', 'Submissions');
         expect(result.ErrorID).to.equal(0);
         expect(result.Submissions).to.be.an('Array').that.has.lengthOf.greaterThan(0);
         for (let i = 0; i < result.Submissions.length; i++) {

@@ -353,9 +353,11 @@ async function getMobileOriginatedMessages(auth, filter) {
         reject(err);
       } else {
         const result = JSON.parse(body);
-        const messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
-        const moreMessages = result.More ? ' more messages from ' + result.NextStartID : '';
-        logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId + moreMessages);
+        if (result.Messages) {
+          const messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
+          const moreMessages = result.More ? ' more messages from ' + result.NextStartID : '';
+          logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId + moreMessages);
+        }
         resolve(result);
       }
     });
@@ -438,8 +440,10 @@ async function submitMobileTerminatedMessages(auth, messages) {
       } else {
         if (resp.statusCode === 200) {
           const result = body.SubmitForwardMessages_JResult;
-          const messagesSubmittedCount = result.Submissions !== null ? result.Submissions.length : 0;
-          logger.debug(messagesSubmittedCount + ' messages submitted to Mailbox ' + auth.accessId);
+          if (result.Submissions) {
+            const messagesSubmittedCount = result.Submissions !== null ? result.Submissions.length : 0;
+            logger.debug(messagesSubmittedCount + ' messages submitted to Mailbox ' + auth.accessId);
+          }
           resolve(result);
         } else {
           reject('statusCode: ' + resp.statusCode);
@@ -512,8 +516,10 @@ async function getMobileTerminatedMessages(auth, ids) {
         reject(err);
       } else {
         const result = JSON.parse(body);
-        const messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
-        logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId);
+        if (result.Messages) {
+          const messagesRetrievedCount = result.Messages !== null ? result.Messages.length : 0;
+          logger.debug(messagesRetrievedCount + ' messages retrieved from Mailbox ' + auth.accessId);
+        }
         resolve(result);
       }
     });
@@ -589,8 +595,10 @@ async function getMobileTerminatedStatuses(auth, filter) {
         reject(err);
       } else {
         const result = JSON.parse(body);
-        const messagesStatusesCount = result.Statuses !== null ? result.Statuses.length : 0;
-        logger.debug(messagesStatusesCount + ' statuses retrieved from Mailbox ' + auth.accessId);
+        if (result.Statuses) {
+          const messagesStatusesCount = result.Statuses !== null ? result.Statuses.length : 0;
+          logger.debug(messagesStatusesCount + ' statuses retrieved from Mailbox ' + auth.accessId);
+        }
         resolve(result);
       }
     })
@@ -627,8 +635,10 @@ async function cancelMobileTerminatedMessages(auth, ids) {
         reject(err);
       } else {
         const result = JSON.parse(body);
-        const cancellationsRequestedCount = result.Submissions !== null ? result.Submissions.length : 0;
-        logger.debug(cancellationsRequestedCount + ' cancellations requested for Mailbox ' + auth.accessId);
+        if (result.Submissions) {
+          const cancellationsRequestedCount = result.Submissions !== null ? result.Submissions.length : 0;
+          logger.debug(cancellationsRequestedCount + ' cancellations requested for Mailbox ' + auth.accessId);
+        }
         resolve(result);
       }
     });
