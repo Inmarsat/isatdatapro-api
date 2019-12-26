@@ -73,9 +73,10 @@ async function getIdpVersion() {
       uri: apiUrl + 'info_version.json/',
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
-        logger.error(options.uri + ' returned ' + err);
-        reject(err);
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
+        logger.error(options.uri + ' returned ' + error);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         logger.debug(options.uri + ' returned ' + result);
@@ -153,9 +154,10 @@ async function getIdpTime() {
       uri: apiUrl + 'info_utc_time.json/',
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
-        logger.error(options.uri + ' returned ' + err);
-        reject(err);
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
+        logger.error(options.uri + ' returned ' + error);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         logger.debug(options.uri + ' returned ' + result);
@@ -217,9 +219,10 @@ async function getErrorDefinitions() {
       uri: apiUrl + 'info_errors.json/',
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
-        logger.error(options.uri + ' returned ' + err);
-        reject(err);
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
+        logger.error(options.uri + ' returned ' + error);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         logger.debug(options.uri + ' returned ' + result.length + ' error codes');
@@ -348,9 +351,10 @@ async function getMobileOriginatedMessages(auth, filter) {
       uri: apiUrl + getUri('get_return_messages.json/', auth, apiFilter),
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
-        logger.error(obfuscateLog(options.uri) + ' returned ' + err);
-        reject(err);
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
+        logger.error(obfuscateLog(options.uri) + ' returned ' + error);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         if (result.Messages) {
@@ -433,10 +437,11 @@ async function submitMobileTerminatedMessages(auth, messages) {
       json: true,
     };
     request.post(options, function (err, resp, body) {
-      if (err) {
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
         //TODO: ensure password is obfuscated if body is visible in debug
-        logger.error(options.uri + ' returned ' + err);
-        reject(err);
+        logger.error(options.uri + ' returned ' + error);
+        reject(new Error(error));
       } else {
         if (resp.statusCode === 200) {
           const result = body.SubmitForwardMessages_JResult;
@@ -511,9 +516,10 @@ async function getMobileTerminatedMessages(auth, ids) {
       uri: apiUrl + getUri('get_forward_messages.json/', auth, { fwIDs: fwIds }),
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
         logger.error(obfuscateLog(options.uri) + ' returned ' + err);
-        reject(err);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         if (result.Messages) {
@@ -590,9 +596,10 @@ async function getMobileTerminatedStatuses(auth, filter) {
       uri: apiUrl + getUri('get_forward_statuses.json/', auth, apiFilter),
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
         logger.error(obfuscateLog(options.uri) + ' returned ' + err);
-        reject(err);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         if (result.Statuses) {
@@ -630,9 +637,10 @@ async function cancelMobileTerminatedMessages(auth, ids) {
       uri: apiUrl + getUri('submit_cancelations.json/', auth, apiFilter),
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
         logger.error(obfuscateLog(options.uri) + ' returned ' + err);
-        reject(err);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         if (result.Submissions) {
@@ -690,9 +698,10 @@ async function getMobileIds(auth, filter) {
       uri: apiUrl + getUri('get_mobiles_paged.json/', auth, apiFilter),
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
         logger.error(obfuscateLog(options.uri) + ' returned ' + err);
-        reject(err);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         if (result.Mobiles) {
@@ -734,9 +743,10 @@ async function getBroadcastIds(auth) {
       uri: apiUrl + getUri('get_broadcast_infos.json/', auth),
     };
     request.get(options, function (err, resp, body) {
-      if (err) {
+      if (err || resp.statusCode !== 200) {
+        const error = err !== null ? err : 'HTTP ' + resp.statusCode;
         logger.error(obfuscateLog(options.uri) + ' returned ' + err);
-        reject(err);
+        reject(new Error(error));
       } else {
         const result = JSON.parse(body);
         if (result.BroadcastInfos) {
