@@ -2,7 +2,7 @@
   "name": "isatdatapro-api",
   "version": "0.1.0",
   "description": "A library for accessing the (Inmarsat) IsatData Pro API V1",
-  "main": "lib.js",
+  "main": "./lib/api-v1.js",
   "scripts": {
     "test": "mocha --reporter spec"
   },
@@ -24,6 +24,7 @@
     "mocha": "^6.2.2"
   },
   "dependencies": {
+    "config": "^3.2.5",
     "request": "^2.88.0",
     "winston": "^3.2.1"
   },

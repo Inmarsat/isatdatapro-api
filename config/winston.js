@@ -3,11 +3,11 @@ const { combine, timestamp, label, printf } = format;
 
 const myFormat = printf(({ level, message, label, timestamp }) => {
   //TODO: find a way to insert the calling function name/lineNo
-  var logStructure = `{"timestamp":"${timestamp}","level":"${level}","message":"${message}"}`;
+  const logStructure = `{"timestamp":"${timestamp}","level":"${level}","message":"${message}"}`;
   return logStructure;
 })
 
-var options = {
+const options = {
   file: {
     level: 'info',
     filename: `./logs/info.log`,
@@ -30,7 +30,7 @@ var options = {
   },
 };
 
-var logger = new createLogger({
+const logger = new createLogger({
   transports: [
     new transports.File(options.file),
   ],
