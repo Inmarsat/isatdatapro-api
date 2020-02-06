@@ -2,7 +2,7 @@
  * Message gateway system configuration for isatdatapro-api provides the URL of the MGS being used
  * Set module.exports to inmarsat, simulator or orbcomm
  * Change simulator IP address and/or port as appropriate to your simulation environment
- * @module ./config/message-gateway
+ * @module ./test/message-gateway
  */
 
 'use_strict';

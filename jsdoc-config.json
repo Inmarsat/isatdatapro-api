@@ -1,0 +1,20 @@
+{
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "source": {
+    "includePattern": ".+\\.js(doc)?$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "linenums": false,
+  "templates": {
+    "cleverLinks": true,
+    "monospaceLinks": false
+  },
+  "opts": {
+    "encoding": "utf8",
+    "sort": false,
+    "destination": "./docs",
+    "template": "./node_modules/jaguarjs-jsdoc"
+  }
+}

@@ -1,4 +1,32 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: api-v1.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: api-v1.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * IsatData Pro API V1
  * @module isatdatapro-api
  */
@@ -32,10 +60,10 @@ const logger = winston;
  * @returns {string} a URI including formatted authentication and query parameters
  */
 function getUri(baseUri, auth, filters) {
-  let uri = baseUri + '?access_id=' + auth.accessId + '&password=' + auth.password;
+  let uri = baseUri + '?access_id=' + auth.accessId + '&amp;password=' + auth.password;
   for (let f in filters) {
     if (filters.hasOwnProperty(f)) {
-      uri += '&' + f + '=' + String(filters[f]);
+      uri += '&amp;' + f + '=' + String(filters[f]);
     }
   }
   uri = uri.replace(/ /g, '%20').trim();
@@ -53,11 +81,11 @@ function obfuscateLog(debugMessage) {
   if (debugMessage.indexOf('password=') !== -1
       || debugMessage.indexOf('access_id=') !== -1) {
     const obscure = '***';
-    const messageComponents = debugMessage.split(/[?&]/);
+    const messageComponents = debugMessage.split(/[?&amp;]/);
     let replaceMessage = messageComponents[0];
-    for (let c = 1; c < messageComponents.length; c++) {
+    for (let c = 1; c &lt; messageComponents.length; c++) {
       if (messageComponents[c].split('=')[0] === 'password') {
-        messageComponents[c] = '&password=' + obscure;
+        messageComponents[c] = '&amp;password=' + obscure;
       } else if (messageComponents[c].split('=')[0] === 'access_id') {
         messageComponents[c] = '?access_id=' + obscure;
       }
@@ -71,7 +99,7 @@ function obfuscateLog(debugMessage) {
 
 /**
  * Returns the Message Gateway System software version details
- * @returns {Promise<string>} IDP Message Gateway System software version
+ * @returns {Promise&lt;string>} IDP Message Gateway System software version
  */
 async function getIdpVersion() {
   const promise = new Promise((resolve, reject) => {
@@ -122,15 +150,15 @@ function validateIdpTimeFormat(timestamp) {
     const timestampParts = timestamp.split(' ');
     const dateParts = timestampParts[0].split('-');
     const timeParts = timestampParts[1].split(':');
-    if (dateParts.length === 3 && timeParts.length === 3) {
+    if (dateParts.length === 3 &amp;&amp; timeParts.length === 3) {
       const year = Number(dateParts[0]);
       const month = Number(dateParts[1]);
       const day = Number(dateParts[2]);
       const hour = Number(timeParts[0]);
       const minute = Number(timeParts[1]);
       const second = Number(timeParts[2]);
-      if (1970 <= year <= 9999 && 1 <= month <= 12 && 1 <= day <= 31 
-          && 0 <= hour <= 23 && 0 <= minute <= 59 && 0 <= second <= 59) {
+      if (1970 &lt;= year &lt;= 9999 &amp;&amp; 1 &lt;= month &lt;= 12 &amp;&amp; 1 &lt;= day &lt;= 31 
+          &amp;&amp; 0 &lt;= hour &lt;= 23 &amp;&amp; 0 &lt;= minute &lt;= 59 &amp;&amp; 0 &lt;= second &lt;= 59) {
         //TODO: validate day of month including leap year etc.
         valid = true;
       }
@@ -156,7 +184,7 @@ function idpTimeToDate(idpTime) {
 
 /**
  * Returns current UTC time at the MGS
- * @returns {Promise<Date>} UTC time at the message gateway
+ * @returns {Promise&lt;Date>} UTC time at the message gateway
  */
 async function getIdpTime() {
   const promise = new Promise(function (resolve, reject) {
@@ -235,7 +263,7 @@ function remapJsonKeys(jsonObject) {
   let newJsonObject;
   if (jsonObject instanceof Array) {
     newJsonObject = [];
-    for (let i = 0; i < jsonObject.length; i++) {
+    for (let i = 0; i &lt; jsonObject.length; i++) {
       newJsonObject.push(camelizeObjectKeys(jsonObject[i]));
     }
   } else {
@@ -254,7 +282,7 @@ function remapJsonKeys(jsonObject) {
 
 /**
  * Returns an array of error definitions based on an API error code
- * @returns {Promise<ErrorDefinition[]>} See {@link ErrorDefinition}
+ * @returns {Promise&lt;ErrorDefinition[]>} An array of error definitions
  */
 async function getErrorDefinitions() {
   const promise = new Promise((resolve, reject) => {
@@ -281,7 +309,7 @@ async function getErrorDefinitions() {
 /**
  * Returns a descriptive error name based on an API error code
  * @param {(string|number)} errorId The ErrorID number returned by the API operation
- * @returns {Promise<string>} An error name/description or 'UNDEFINED'
+ * @returns {Promise&lt;string>} An error name/description or 'UNDEFINED'
  */
 async function getErrorName(errorId) {
   let errorName = 'UNDEFINED';
@@ -300,15 +328,15 @@ async function getErrorName(errorId) {
  * @typedef {Object} Field
  * @property {string} Name A descriptive name of the field, usually in camelCase notation
  * @property {string} [Type] Supported types
- *  <br>&nbsp;&nbsp;'enum' is presented as string on decode, may be number or string on encode
- *  <br>&nbsp;&nbsp;'boolean' is presented as a string Value
- *  <br>&nbsp;&nbsp;'unsignedint', 'signedint' are presented as a string Value
- *  <br>&nbsp;&nbsp;'string'
- *  <br>&nbsp;&nbsp;'data' is a string, base64 encoded
- *  <br>&nbsp;&nbsp;'array' is an object with Elements instead of Value
- *  <br>&nbsp;&nbsp;'message' is an object with Message instead of Value
- *  <br>&nbsp;&nbsp;'dynamic' TBC
- *  <br>&nbsp;&nbsp;'property' TBC
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'enum' is presented as string on decode, may be number or string on encode
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'boolean' is presented as a string Value
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'unsignedint', 'signedint' are presented as a string Value
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'string'
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'data' is a string, base64 encoded
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'array' is an object with Elements instead of Value
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'message' is an object with Message instead of Value
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'dynamic' TBC
+ *  &lt;br>&amp;nbsp;&amp;nbsp;'property' TBC
  * @property {string} [Value] Present if Type is 'enum', 'boolean', 'unsignedint', 'signedint', 'string', 'data'
  * @property {Object[]} [Elements] present if Type is 'array'
  * @property {number} [Elements.Index] index of the Elements array
@@ -337,18 +365,18 @@ async function getErrorName(errorId) {
  * @property {string} MobileID The unique Mobile ID of the terminal/modem that sent the message
  * @property {number} SIN Service Identification Number the first byte of payload optionally used for codec
  * @property {number[]} [RawPayload] An array of bytes as decimal numbers (0..255)
- *  <br>&nbsp;&nbsp;present if requested in the get_return_messages operation
+ *  &lt;br>&amp;nbsp;&amp;nbsp;present if requested in the get_return_messages operation
  * @property {Message} [Payload] A JSON data structure
- *  <br>&nbsp;&nbsp;present if the MGS has decoded the raw payload using a Message Definition File on the Mailbox
+ *  &lt;br>&amp;nbsp;&amp;nbsp;present if the MGS has decoded the raw payload using a Message Definition File on the Mailbox
  */
 
 /**
  * A filter to apply when retrieving Mobile-Originated messages
  * @typedef {Object} FilterGetMobileOrigintated
  * @property {string} [startTimeUtc] Start time (high water mark from prior NextStartUTC) timestamp format 'YYYY-MM-DD hh:mm:ss'
- *  <br>&nbsp;&nbsp;required if startMessageId is not present, ignored if startMessageId is present
+ *  &lt;br>&amp;nbsp;&amp;nbsp;required if startMessageId is not present, ignored if startMessageId is present
  * @property {number} [startMessageId] Start message ID (high water mark from prior NextStartID) 
- *  <br>&nbsp;&nbsp;required if startTimeUtc is not present
+ *  &lt;br>&amp;nbsp;&amp;nbsp;required if startTimeUtc is not present
  * @property {string} [endTimeUtc] Optional end time if startTimeUtc is used, to return a range of messages 
  *  rather than all since startTimeUtc
  * @property {string} [mobileId] Optional filter to retrieve only messages for a single terminal/modem
@@ -370,7 +398,7 @@ async function getErrorName(errorId) {
  * Returns a response object containing retrieved messages that match the filter
  * @param {ApiV1Auth} auth Mailbox authentication parameters
  * @param {FilterGetMobileOrigintated} filter 
- * @returns {Promise<GetReturnMessagesResponse>} A response object
+ * @returns {Promise&lt;GetReturnMessagesResponse>} A response object
  */
 async function getMobileOriginatedMessages(auth, filter) {
   let apiFilter = {
@@ -467,7 +495,7 @@ const WakeupPeriods = {
  * Submits Mobile-Terminated message(s) to remote modem(s)
  * @param {ApiV1Auth} auth Mailbox authentication
  * @param {ForwardMessage[]} messages An array of messages
- * @returns {Promise<SubmitForwardMessagesResult>} An error code and metadata
+ * @returns {Promise&lt;SubmitForwardMessagesResult>} An error code and metadata
  */
 async function submitMobileTerminatedMessages(auth, messages) {
   const promise = new Promise((resolve, reject) => {
@@ -541,7 +569,7 @@ function getFwIdsString(ids) {
     ids = [ids];
   }
   if (Array.isArray(ids)) {
-    for (let i = 0; i < ids.length; i++) {
+    for (let i = 0; i &lt; ids.length; i++) {
       if (i > 0) fwIds += ',';
       fwIds += ids[i];
     }
@@ -553,7 +581,7 @@ function getFwIdsString(ids) {
 * Retrieves Mobile-Terminated messages submitted, by ID(s)
 * @param {ApiV1Auth} auth Mailbox authentication
 * @param {(number|number[])} ids An array of unique ForwardMessageID numbers
-* @returns {Promise<GetForwardMessagesResult>} The requested IDs and/or error code
+* @returns {Promise&lt;GetForwardMessagesResult>} The requested IDs and/or error code
 */
 async function getMobileTerminatedMessages(auth, ids) {
   const fwIds = getFwIdsString(ids);
@@ -631,11 +659,11 @@ const ForwardMessageStates = {
  * NOTE: API should support ids as optional if startTimeUtc is specified
  * @param {ApiV1Auth} auth Mailbox authentication
  * @param {ForwardStatusFilter} filter A set of filter criteria for the query
- * @returns {Promise<GetForwardStatusesResult>} result
+ * @returns {Promise&lt;GetForwardStatusesResult>} result
  */
 async function getMobileTerminatedStatuses(auth, filter) {
   let apiFilter = {};
-  if (filter.ids === null && filter.startTimeUtc === null) {
+  if (filter.ids === null &amp;&amp; filter.startTimeUtc === null) {
     throw new Error('getMobileTerminatedStatuses must contain at least one of ids or startTimeUtc');
   }
   if (filter.ids !== null) apiFilter.fwIDs = getFwIdsString(filter.ids);
@@ -678,7 +706,7 @@ async function getMobileTerminatedStatuses(auth, filter) {
  * Requests cancellation of specific Mobile-Terminated message(s)
  * @param {ApiV1Auth} auth Mailbox authenticataion
  * @param {(number|number[])} ids Message id(s) to be cancelled
- * @returns {Promise<CancelForwardMessagesResult>}
+ * @returns {Promise&lt;CancelForwardMessagesResult>}
  */
 async function cancelMobileTerminatedMessages(auth, ids) {
   let apiFilter = {};
@@ -731,7 +759,7 @@ async function cancelMobileTerminatedMessages(auth, ids) {
  * @param {Object} [filter] Filters for ID (next ID for sequential query) and size
  * @param {string} [filter.mobileId] Set the only/first Mobile ID to query, if present
  * @param {number} [filter.pageSize] Maximum number of results to return (1..1000) defaults to 1000
- * @returns {Promise<MobileIdList>} A response list with error code
+ * @returns {Promise&lt;MobileIdList>} A response list with error code
  */
 async function getMobileIds(auth, filter) {
   const promise = new Promise((resolve, reject) => {
@@ -743,7 +771,7 @@ async function getMobileIds(auth, filter) {
         apiFilter.since_mobile = filter.mobileId;
       }
       if (typeof (filter.pageSize) === 'number'
-        && filter.pageSize >= 1 && filter.pageSize <= 1000) {
+        &amp;&amp; filter.pageSize >= 1 &amp;&amp; filter.pageSize &lt;= 1000) {
         apiFilter.page_size = filter.pageSize;
       }
     }
@@ -774,7 +802,7 @@ async function getMobileIds(auth, filter) {
 
 /**
  * Response structure for a BroadcastID query
- * @typedef {Object} BroadcastIdList
+ * @typedef {Object} BroadcastIddList
  * @property {number} ErrorID An error code for the get_mobiles_paged operation
  * @property {BroadcastInformation[]} BroadcastInfos A list of Mobile objects
  */
@@ -789,7 +817,7 @@ async function getMobileIds(auth, filter) {
 /**
  * Returns the list of Broadcast IDs associated with the Mailbox
  * @param {ApiV1Auth} auth Mailbox authentication
- * @returns {Promise<BroadcastIdList>} See {@link BroadcastIdList} and {@link BroadcastInformation}
+ * @returns {Promise&lt;BroadcastIddList>} A response list with error code
  */
 async function getBroadcastIds(auth) {
   const promise = new Promise((resolve, reject) => {
@@ -833,3 +861,26 @@ module.exports = {
   dateToIdpTime,
   idpTimeToDate,
 };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-isatdatapro-api.html">isatdatapro-api</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Feb 05 2020 16:28:19 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

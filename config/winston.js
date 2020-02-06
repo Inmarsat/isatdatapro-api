@@ -3,9 +3,13 @@ const { combine, timestamp, label, printf } = format;
 
 const myFormat = printf(({ level, message, label, timestamp }) => {
   //TODO: find a way to insert the calling function name/lineNo
-  const logStructure = `{"timestamp":"${timestamp}","level":"${level}","message":"${message}"}`;
+  const logStructure = `{
+    "timestamp":"${timestamp}",
+    "level":"${level}",
+    "message":"${message}"}`;
+  
   return logStructure;
-})
+});
 
 const options = {
   file: {

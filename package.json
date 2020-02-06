@@ -1,6 +1,6 @@
 {
   "name": "isatdatapro-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A library for accessing the (Inmarsat) IsatData Pro API V1",
   "main": "./lib/api-v1.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "tbd"
+    "url": "https://github.com/gbrucepayne/isatdatapro-api.git"
   },
   "keywords": [
     "idp",
@@ -24,13 +24,15 @@
     "mocha": "^6.2.2"
   },
   "dependencies": {
-    "config": "^3.2.5",
+    "jaguarjs-jsdoc": "^1.1.0",
+    "jsdoc": "^3.6.3",
     "request": "^2.88.0",
     "winston": "^3.2.1"
   },
   "directories": {
-    "doc": "docs",
+    "doc": "doc",
     "example": "examples",
+    "lib": "lib",
     "test": "test"
   }
 }

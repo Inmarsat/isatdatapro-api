@@ -20,22 +20,32 @@ Mobile IDs may be provisioned against a particular Mailbox.
 #### Messages
 
 Messages are binary blobs sent over the satellite network that may optionally be mapped to a codec 
-provisioned on a Mailbox.  When the Inmarsat-supported codec format(s) are used, messages will be presented 
-as JSON objects represented by some nominal overhead and a data field structure:
-```
-{
-  SIN,
-  MIN,
-  Name,
-  Fields: []
-}
-```
+provisioned on a Mailbox.
 
 **SIN** (Service Identification Number) is the first byte of the message payload, 
 where values from 0..15 are reserved for system / manufacturer use.
 
 **MIN** (Message Identification Number) is the second byte of the message payload, 
 used only when a message codec has been provisioned on the Mailbox.
+
+**RawPayload** presents a decimal-encoded byte array including SIN and MIN bytes
+
+**Payload** is optionally present if the Inmarsat-supported codec format(s) are used, messages will be presented 
+as JSON objects represented by some metadata and a data field structure:
+```
+{
+  "SIN": 255,
+  "MIN": 255,
+  "Name": "myMessageName",
+  "Fields": [
+    {
+      "Name": "myFieldName",
+      "Type": "unsignedint",
+      "Value": 0
+    }
+  ]
+}
+```
 
 ### Prerequisites
 
@@ -44,18 +54,17 @@ www.inmarsat.com
 
 ### Installing
 
-Install from NPM:
+Install from NPM in your project directory:
 ```
 npm install isatdatapro-api
 ```
 
 ### Configuration
 
-The library uses a set of configuration files in the **./config** subdirectory:
+The library uses configuration file(s) in **./node_modules/isatdatapro-api/config**:
 
-* *message-gateway.js* sets up the active IDP gateway being used 
-(module.exports = simulator, inmarsat or orbcomm)
-* *winston.js* sets up logging defaults to the **./logs** subdirectory
+* *message-gateway.js* sets up the active IDP gateway URL being used
+* *winston.js* sets up logging defaults to the **./logs** subdirectory of your project
 
 ### Testing
 
@@ -64,27 +73,27 @@ and expected returns, as well as a template to configure Mailbox credentials
 
 ```
 idpApi.getMobileOriginatedMessages(auth, filter)
-      .then(function (result) {
-        expect(result)
+  .then(function (result) {
+    expect(result)
+      .to.be.an('Object')
+      .that.has.all.keys('ErrorID', 'Messages', 'More', 'NextStartUTC', 'NextStartID');
+    expect(result.ErrorID).to.equal(0);
+    if (result.Messages !== null) {
+      for (let i = 0; i < result.Messages.length; i++) {
+        let message = result.Messages[i];
+        expect(message)
           .to.be.an('Object')
-          .that.has.all.keys('ErrorID', 'Messages', 'More', 'NextStartUTC', 'NextStartID');
-        expect(result.ErrorID).to.equal(0);
-        if (result.Messages !== null) {
-          for (let i = 0; i < result.Messages.length; i++) {
-            let message = result.Messages[i];
-            expect(message)
-              .to.be.an('Object')
-              .that.includes.all.keys('ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN');
-            if (mailboxIndex === 1) expect(message).to.include.key('OTAMessageSize');
-            if (message.RawPayload) expect(message.RawPayload).to.be.an('Array');
-            if (message.Payload) expect(message.Payload).to.have.all.keys('SIN', 'MIN', 'Name', 'Fields');
-          }
-        }
-        expect(result.NextStartID).to.be.a('number');
-      })
-      .catch(err => {
-        console.log(err);
-      });
+          .that.includes.all.keys('ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN');
+        if (mailboxIndex === 1) expect(message).to.include.key('OTAMessageSize');
+        if (message.RawPayload) expect(message.RawPayload).to.be.an('Array');
+        if (message.Payload) expect(message.Payload).to.have.all.keys('SIN', 'MIN', 'Name', 'Fields');
+      }
+    }
+    expect(result.NextStartID).to.be.a('number');
+  })
+  .catch(err => {
+    console.log(err);
+  });
 ```
 
 ## Deployment

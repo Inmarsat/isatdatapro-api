@@ -4,9 +4,9 @@ const chai = require('chai');
 chai.config.includeStack = false;
 const expect = chai.expect;
 const idpApi = require('../lib/api-v1');
-const mailboxes = require('../config/mailboxes').credentials;
-const testTerminals = require('../config/mailboxes').testTerminals;
-const modemMessages = require('./modem-messages');
+const mailboxes = require('./mailboxes').credentials;
+const testTerminals = require('./mailboxes').testTerminals;
+//const modemMessages = require('./modem-messages');
 
 // Set to 0 for simulator or 1 for live gateway
 const mailboxIndex = (idpApi.apiUrl.includes('api.inmarsat.com')) ? 1 : 0;
@@ -87,7 +87,7 @@ describe('#getErrorName()', function () {
 });
 
 describe('#getMobileOriginatedMessages()', function () {
-  const apiKeys = ['ErrorId', 'Messages', 'More', 'NextStartUTC', 'NextStartID'];
+  const apiKeys = ['ErrorID', 'Messages', 'More', 'NextStartUTC', 'NextStartID'];
   const messageKeys = ['ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN'];
   const payloadKeys = ['SIN', 'MIN', 'Name', 'Fields'];
   const date = new Date();
