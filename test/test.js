@@ -43,6 +43,29 @@ describe('#getIdpTime()', function () {
   })
 });
 
+
+describe('#dateToIdpTime()', function () {
+  let d = new Date();
+  let dString = d.toISOString();
+  let result;
+  it(`${d} should return IDP datestamp`, function() {
+    result = idpApi.dateToIdpTime(d);
+    expect(result).to.be.a('string').with.length(19);
+    console.log(`result: ${result}`);
+  })
+  it(`${dString} should return IDP datestamp`, function() {
+    result = idpApi.dateToIdpTime(dString);
+    expect(result).to.be.a('string').with.length(19);
+    console.log(`result: ${result}`);
+  })
+  it(`other should return 1970-01-01 00:00:00`, function() {
+    result = idpApi.dateToIdpTime('other');
+    expect(result).to.equal('1970-01-01 00:00:00');
+    console.log(`result: ${result}`);
+  })
+});
+
+
 describe('#getErrorDefinitions()', function () {
   const keys = ['ID', 'Name', 'Description'];
   const testDesc = 'should return a non-empty Array of error code objects'
