@@ -310,6 +310,14 @@ describe('#getMobileTerminatedMessages()', function() {
   });
 });
 
+describe('#getMtStateDef()', function() {
+  let state = 0;
+  let stateDef = idpApi.getMtStateDef(state);
+  it('should return SUBMITTED', function() {
+    expect(stateDef).to.equal('SUBMITTED');
+  })
+})
+
 describe('#cancelMobileTerminatedMessages()', function() {
   let ids;
   if (mobileTerminatedMessageIds.length > 0) {
