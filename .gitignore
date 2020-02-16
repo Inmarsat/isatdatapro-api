@@ -1,8 +1,9 @@
 # Ignore the following files/directories
 
-node_modules/*
-.vscode/*
+node_modules
+.vscode
 config/mailboxes.js
 logs/*
 docs/make*
 docs/Make*
+out/*

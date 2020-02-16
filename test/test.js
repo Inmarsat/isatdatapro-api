@@ -19,15 +19,16 @@ let mobileTerminatedMessageIds = [];
 describe('#getIdpVersion()', function () {
   it('should return a version string', function () {
     return Promise.resolve(idpApi.getIdpVersion())
-    .then(function (result) {
+    .then(result => {
       console.log('Returned:', JSON.stringify(result));
       expect(result).to.be.a('string');
       //TODO: additional criteria on format X.Y.Z.a
     })
     .catch(err => {
+      console.log(`Error: ${err.message}`);
       throw err;
     });
-})
+  })
 });
 
 describe('#getIdpTime()', function () {

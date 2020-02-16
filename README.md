@@ -99,12 +99,15 @@ idpApi.getMobileOriginatedMessages(auth, filter)
 ## Deployment
 
 Generally you would set up a set of Mailboxes to poll periodically on a timer, for example every 10 seconds 
-for Mobile-Originated messages and every 10 seconds for Mobile-Terminated statuses if any messages have 
+for Mobile-Originated messages and every 10+n seconds for Mobile-Terminated statuses if any messages have 
 been submitted.
 
 Typically you would filter duplicates based on unique message ID and put retrieved 
 or submitted messages into a database.  Also your system must keep track of **NextStartUTC** 
 for successive message retrieval calls.
+
+Timeouts or HTTP errors will be indicated with a Promise rejection that includes an error message
+'TIMEOUT_CONNECTION', 'TIMEOUT_READ', or 'HTTP <errorCode>'
 
 ## Authors
 
