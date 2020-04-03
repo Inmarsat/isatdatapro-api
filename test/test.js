@@ -5,8 +5,8 @@ const chai = require('chai');
 chai.config.includeStack = false;
 const expect = chai.expect;
 const idpApi = require('../lib/api-v1');
-const mailboxes = require('./mailboxes').credentials;
-const testTerminals = require('./mailboxes').testTerminals;
+const mailboxes = require('./mailboxes-local').credentials;
+const testTerminals = require('./mailboxes-local').testTerminals;
 //const modemMessages = require('./modem-messages');
 
 // Set to 0 for simulator or 1 for live gateway

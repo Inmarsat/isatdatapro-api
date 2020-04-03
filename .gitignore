@@ -2,7 +2,8 @@
 
 node_modules
 .vscode
-config/mailboxes.js
+config/development.json
+test/mailboxes-local.js
 logs/*
 docs/make*
 docs/Make*
