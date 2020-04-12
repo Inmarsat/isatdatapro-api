@@ -1,6 +1,6 @@
 'use strict';
 
-//process.env.NODE_ENV = "default"
+process.env.NODE_ENV = 'production'
 const chai = require('chai');
 chai.config.includeStack = false;
 const expect = chai.expect;
@@ -12,7 +12,10 @@ const testTerminals = require('./mailboxes-local').testTerminals;
 // Set to 0 for simulator or 1 for live gateway
 const config = require('config');
 console.log(`Testing NODE_ENV ${config.util.getEnv('NODE_ENV')} at ${idpApi.apiUrl}`);
-const mailboxIndex = (idpApi.apiUrl.includes('api.inmarsat.com')) ? 1 : 0;
+let mailboxIndex = 0
+if (idpApi.apiUrl.includes('api.inmarsat.com')) {
+  mailboxIndex = 1;
+}
 const testMobileId = testTerminals[mailboxIndex].mobileId;
 const auth = mailboxes[mailboxIndex];
 

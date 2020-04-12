@@ -1,10 +1,11 @@
-const myMailbox = {
-  "description": "myMailbox",
-  "accessId": "myAccessId",
-  "password": "myPassword"
-};
+//process.env.NODE_ENV = 'production'
 
-const idpApi = require('isatdatapro-api');
+const myMailbox = require('../test/mailboxes-local').credentials[1];
+
+//const idpApi = require('isatdatapro-api');
+const idpApi = require('../lib/api-v1')
+
+const gateway = require('../config/default.json').idpGatewayUrl;
 
 async function getMessages() {
   const auth = {
@@ -16,7 +17,7 @@ async function getMessages() {
   const filter = {
     startTimeUtc: idpApi.dateToIdpTime(date),
   };
-  return Promise.resolve(idpApi.getMobileOriginatedMessages(auth, filter))
+  return Promise.resolve(idpApi.getMobileOriginatedMessages(auth, filter, gateway))
   .then(function (result) {
     if (result.ErrorID !== 0) {
       console.log(`Error: ${idpApi.getErrorName(result.ErrorID)}`);
@@ -27,7 +28,7 @@ async function getMessages() {
           console.log(`Message ${i}: ${JSON.stringify(message, null, 2)}`);
         }
       } else {
-        console.log('No messages to retreive.');
+        console.log(`No messages to retreive from ${myMailbox.accessId}.`);
       }
     }
   })
@@ -35,3 +36,5 @@ async function getMessages() {
     throw err;
   });
 }
+
+getMessages();
