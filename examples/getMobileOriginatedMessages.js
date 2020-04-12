@@ -1,12 +1,13 @@
 //process.env.NODE_ENV = 'production'
 
-const myMailbox = require('../test/mailboxes-local').credentials[1];
-
-//const idpApi = require('isatdatapro-api');
-const idpApi = require('../lib/api-v1')
+const idpApi = require('isatdatapro-api');
 
 const gateway = require('../config/default.json').idpGatewayUrl;
+const myMailbox = require('../test/mailboxes-local').credentials[1];
 
+/**
+ * Retrieves messages from the specified Mailbox and prints to console
+ */
 async function getMessages() {
   const auth = {
     accessId: myMailbox.accessId,
