@@ -1,6 +1,7 @@
 //process.env.NODE_ENV = 'production'
 
-const idpApi = require('isatdatapro-api');
+//const idpApi = require('isatdatapro-api');
+const idpApi = require('../lib/api-v1');
 
 const gateway = require('../config/default.json').idpGatewayUrl;
 const myMailbox = require('../test/mailboxes-local').credentials[1];
@@ -16,7 +17,7 @@ async function getMessages() {
   const date = new Date();
   date.setUTCHours(date.getUTCHours() - 24);
   const filter = {
-    startTimeUtc: idpApi.dateToIdpTime(date),
+    startTimeUtc: date,
   };
   return Promise.resolve(idpApi.getMobileOriginatedMessages(auth, filter, gateway))
   .then(function (result) {

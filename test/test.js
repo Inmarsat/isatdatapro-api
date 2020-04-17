@@ -124,7 +124,7 @@ describe('api-v1', function() {
     const date = new Date();
     date.setUTCHours(date.getUTCHours() - RETRIEVAL_OFFSET);
     const filter = {
-      startTimeUtc: idpApi.dateToIdpTime(date),
+      startTimeUtc: date,
     };
     const description = `should include properties ${apiKeys}`
         + `\n\t where Messages include keys ${messageKeys}`
@@ -261,7 +261,7 @@ describe('api-v1', function() {
         } else {
           const date = new Date();
           date.setUTCHours(date.getUTCHours() - RETRIEVAL_OFFSET);
-          filter.startTimeUtc = idpApi.dateToIdpTime(date)
+          filter.startTimeUtc = date;
         }
         return Promise.resolve(idpApi.getMobileTerminatedStatuses(auth, filter))
         .then(function (result) {
