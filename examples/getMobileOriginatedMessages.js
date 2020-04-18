@@ -24,11 +24,15 @@ async function getMessages() {
     if (result.ErrorID !== 0) {
       console.log(`Error: ${idpApi.getErrorName(result.ErrorID)}`);
     } else {
+      console.log(`Next: ${idpApi.idpTimeToDate(result.NextStartUTC)}`);
       if (result.Messages !== null) {
+        console.log(`${result.Messages.length} messages returned`);
+        /*
         for (let i = 0; i < result.Messages.length; i++) {
           let message = result.Messages[i];
           console.log(`Message ${i}: ${JSON.stringify(message, null, 2)}`);
         }
+        */
       } else {
         console.log(`No messages to retreive from ${myMailbox.accessId}.`);
       }
