@@ -1,6 +1,6 @@
 {
   "name": "isatdatapro-api",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "A library for accessing the (Inmarsat) IsatData Pro API V1",
   "main": "./lib/api-v1.js",
   "scripts": {
