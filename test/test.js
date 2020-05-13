@@ -73,7 +73,7 @@ describe('api-v1', function() {
   });
   
   describe('#getErrorDefinitions()', function () {
-    const keys = ['ID', 'Name', 'Description'];
+    const keys = ['errorId', 'name', 'description'];
     const testDesc = 'should return a non-empty Array of error code objects'
                       + ` with properties ${keys}`;
     it(testDesc, function () {
@@ -106,6 +106,7 @@ describe('api-v1', function() {
         it(key + ' should return ' + testCases[key], function () {
           return Promise.resolve(idpApi.getErrorName(key))
           .then(function (result) {
+            console.log(`${result}`);
             expect(result).to.equal(testCases[key]);
           })
           .catch(err => {
@@ -117,11 +118,16 @@ describe('api-v1', function() {
     })
   });
   
-  describe('#getMobileOriginatedMessages()', function () {
+  describe('#getReturnMessages()', function () {
+    /* Native API responses
     const apiKeys = ['ErrorID', 'Messages', 'More', 'NextStartUTC', 'NextStartID'];
     const messageKeys = ['ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN'];
     const payloadKeys = ['SIN', 'MIN', 'Name', 'Fields'];
-    const date = new Date();
+    */
+   const apiKeys = ['errorId', 'messages', 'more', 'nextStartTime', 'nextStartId'];
+   const messageKeys = ['messageId', 'mobileId', 'receiveTime', 'mailboxTime', 'satelliteRegion', 'serviceCode', 'size'];
+   const payloadKeys = ['serviceCode', 'messageCode', 'name', 'fields'];
+   const date = new Date();
     date.setUTCHours(date.getUTCHours() - RETRIEVAL_OFFSET);
     const filter = {
       startTimeUtc: date,
@@ -131,26 +137,26 @@ describe('api-v1', function() {
         + `\n\t and if a message includes Payload it has keys ${payloadKeys}`
         + '\n\t and if a message includes RawPayload it is an array';
     it(description, function () {
-      return Promise.resolve(idpApi.getMobileOriginatedMessages(auth, filter))
+      return Promise.resolve(idpApi.getReturnMessages(auth, filter))
       .then(function (result) {
-        //console.log('Returned:', JSON.stringify(result));
+        console.log('Returned:', JSON.stringify(result));
         expect(result)
           .to.be.an('Object')
           .that.has.all.keys(apiKeys);
-        expect(result.ErrorID).to.equal(0);
-        if (result.Messages !== null) {
-          for (let i = 0; i < result.Messages.length; i++) {
-            let message = result.Messages[i];
+        expect(result.errorId).to.equal(0);
+        if (result.messages !== null) {
+          for (let i = 0; i < result.messages.length; i++) {
+            let message = result.messages[i];
             expect(message)
               .to.be.an('Object')
-              .that.includes.all.keys('ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN');
+              .that.includes.all.keys(messageKeys);
             // Modem Simulator does not seem to provide OTAMessageSize...
-            if (mailboxIndex === 1) expect(message).to.include.key('OTAMessageSize');
-            if (message.RawPayload) expect(message.RawPayload).to.be.an('Array');
-            if (message.Payload) expect(message.Payload).to.have.all.keys('SIN', 'MIN', 'Name', 'Fields');
+            //if (mailboxIndex === 1) expect(message).to.include.key('OTAMessageSize');
+            if (message.payloadRaw) expect(message.payloadRaw).to.be.an('Array');
+            if (message.payloadJson) expect(message.payloadJson).to.have.all.keys(payloadKeys);
           }
         }
-        expect(result.NextStartID).to.be.a('number');
+        expect(result.nextStartId).to.be.a('number');
       })
       .catch(err => {
         console.log(`Error: ${err.message}`);
@@ -161,9 +167,13 @@ describe('api-v1', function() {
   });
   
   describe('#getMobileIds()', function () {
+    /*
     const apiKeys = ['ErrorID', 'Mobiles'];
     const mobileKeys = ['ID', 'Description', 'LastRegistrationUTC', 'RegionName'];
-    const description = 'should return a list of Mobile information including' +
+    */
+   const apiKeys = ['errorId', 'mobiles'];
+   const mobileKeys = ['mobileId', 'description', 'lastRegistrationTime', 'satelliteRegion'];
+   const description = 'should return a list of Mobile information including' +
                         `${mobileKeys}`;
     it(description, function () {
       //const auth = mailboxes[mailboxIndex];
@@ -173,10 +183,10 @@ describe('api-v1', function() {
         expect(result)
           .to.be.an('Object')
           .that.includes.all.keys(apiKeys);
-        expect(result.ErrorID).to.equal(0);
-        if (result.Mobiles !== null) {
-          for (let i = 0; i < result.Mobiles.length; i++) {
-            expect(result.Mobiles[i])
+        expect(result.errorId).to.equal(0);
+        if (result.mobiles !== null) {
+          for (let i = 0; i < result.mobiles.length; i++) {
+            expect(result.mobiles[i])
               .to.be.an('Object')
               .that.includes.all.keys(mobileKeys);
           }
@@ -194,15 +204,15 @@ describe('api-v1', function() {
     const TEST_MESSAGE_SIZE = 100;
     let forwardIds = [];
     
-    describe('#submitMobileTerminatedMessages()', function () {
+    describe('#submitForwardMessages()', function () {
       let userMessageId = 0;
       beforeEach(function() {
         userMessageId += 1;
       });
-      const apiKeys = ['ErrorID', 'Submissions'];
-      const submissionKeys = ['ErrorID', 'ForwardMessageID', 'UserMessageID', 
-        'DestinationID', 'StateUTC', 'ScheduledSendUTC', 'TerminalWakeupPeriod',
-        'OTAMessageSize'
+      const apiKeys = ['errorId', 'submissions'];
+      const submissionKeys = ['errorId', 'messageId', 'userMessageId', 
+        'mobileId', 'stateTime', 'scheduledSendTime', 'mobileWakeupPeriod',
+        'size'
       ];
       const description = `should return an array of Submissions with ${submissionKeys}`;
       it(description, function () {
@@ -365,7 +375,7 @@ describe('api-v1', function() {
   });
   describe('#getMtStateDef()', function() {
     let state = 0;
-    let stateDef = idpApi.getMtStateDef(state);
+    let stateDef = idpApi.getStateDefinition(state);
     it('should return SUBMITTED', function() {
       expect(stateDef).to.equal('SUBMITTED');
     })
