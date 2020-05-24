@@ -1,3 +1,7 @@
+/**
+ * Winston logging configuration for isatdatapro-api
+ */
+
 const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 

@@ -3,7 +3,8 @@
 //const idpApi = require('isatdatapro-api');
 const idpApi = require('../lib/api-v1');
 
-const gateway = require('../config/default.json').idpGatewayUrl;
+//const gateway = require('../config/default.json').idpGatewayUrl;
+const gateway = idpApi.apiUrl;
 const myMailbox = require('../test/mailboxes-local').credentials[1];
 
 /**
