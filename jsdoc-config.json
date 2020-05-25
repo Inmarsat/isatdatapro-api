@@ -2,7 +2,12 @@
   "plugins": [
     "plugins/markdown"
   ],
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc", "closure"]
+  },
   "source": {
+    "include": ["./lib/api-v1.js"],
     "includePattern": ".+\\.js(doc)?$",
     "excludePattern": "(^|\\/|\\\\)_"
   },
@@ -15,6 +20,8 @@
     "encoding": "utf8",
     "sort": false,
     "destination": "./docs",
-    "template": "./node_modules/jaguarjs-jsdoc"
+    "recurse": true,
+    "template": "./node_modules/jaguarjs-jsdoc",
+    "readme": "README.md"
   }
 }

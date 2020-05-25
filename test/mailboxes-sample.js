@@ -1,8 +1,12 @@
-var credentials = [
+/**
+ * Sample test configuration for library testing
+ */
+
+const credentials = [
   { description: 'Simulator', accessId: 'mailbox', password: 'password' },
 ];
 
-var testTerminals = [
+const testTerminals = [
   { mobileId: '00000000SKYEE3D', description: 'Modem Simulator' },
 ]
 

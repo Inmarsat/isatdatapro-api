@@ -4,7 +4,7 @@
 const idpApi = require('../lib/api-v1');
 
 //const gateway = require('../config/default.json').idpGatewayUrl;
-const gateway = idpApi.apiUrl;
+const gateway = "http://localhost:3333/";
 const myMailbox = require('../test/mailboxes-local').credentials[2];
 const myMobileId = require('../test/mailboxes-local').testTerminals[2].mobileId;
 
@@ -171,9 +171,9 @@ async function cancelForwardMessage() {
   });
 }
 
-//getMessages();
+getMessages();
 //getMobiles();
 //submitMessages();
-getStatuses();
+//getStatuses();
 //getForwardMessage();
 //cancelForwardMessage();

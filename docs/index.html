@@ -58,6 +58,103 @@
 
 
 
+    <section>
+        <article class="readme"><h1>ISATDATAPRO-API</h1>
+<p>A library of functions to interface with Inmarsat's IsatData Pro (&quot;IDP&quot;) satellite IoT messaging service.</p>
+<p><a target="_blank" href="./module-isatdatapro-api.html">Library Documentation</a></p>
+<h2>Getting Started</h2>
+<p>You should familiarize yourself with the key concepts of the IDP system, particularly the message structure
+and Mailbox polling for message collection and submission.</p>
+<h3>Key Concepts</h3>
+<h4>Mailbox</h4>
+<p>All data is transacted through the IDP system via a Mailbox concept that provides a unique access credential
+typically mapped either to your particular application use-case, or to your customer's span of control.  Mailboxes have a unique authentication pair: <em>accessId</em> and <em>password</em>.</p>
+<h4>Mobile</h4>
+<p>Modems on the network use globally unique Mobile ID (<em>mobileId</em>) serial numbers for addressing, where any number of
+Mobile IDs may be provisioned against a particular Mailbox.</p>
+<h4>Message</h4>
+<p>Messages are binary blobs sent over the satellite network that may optionally be mapped to a codec
+provisioned on a Mailbox.  Each message has a globally unique <em>messageId</em> assigned by the system.</p>
+<p><strong>Return</strong> Messages are sent from the remote device, also called Mobile-Originated.</p>
+<p><strong>Forward</strong> Messages are sent to the remote device from your application server,
+also called Mobile-Terminated.</p>
+<p><strong>SIN</strong> (Service Identification Number) is the first byte of the message payload intended as a codec key,
+where values from 0..15 are reserved for system / manufacturer use.</p>
+<p><strong>MIN</strong> (Message Identification Number) is the second byte of the message payload intended as a secondary
+codec key, presented when a message codec has been provisioned on the Mailbox.</p>
+<p><strong>Raw Payload</strong> presents a decimal-encoded byte array including SIN and MIN bytes</p>
+<p><strong>(JSON) Payload</strong> is optionally presented.  If the Inmarsat-supported codec format(s) are used,
+messages will be presented as JSON objects represented by some metadata and a data field structure:</p>
+<p><strong>Data Type</strong> JSON payload fields with &quot;Type&quot;: &quot;data&quot; use base64 encoded string representation</p>
+<p><strong>Message Definition File</strong> is an XML representation of the codec that may be provisioned (uploaded) to a Mailbox.  See developer.inmarsat.com for details.</p>
+<h5>Native API remapping</h5>
+<p>Version 1.0 of the library remaps the native Inmarsat API JSON tags to camelCase and abstracts certain
+concepts:</p>
+<ul>
+<li><em>codecServiceId</em> replaces SIN</li>
+<li><em>codecMessageId</em> replaces MIN</li>
+<li><em>dataType</em> replaces Type within Fields</li>
+<li><em>stringValue</em> replaces Value within Fields, which are represented as strings on the native API</li>
+<li><em>payloadRaw</em> replaces RawPayload</li>
+<li><em>payloadJson</em> replaces Payload</li>
+<li><em>Time</em> replaces UTC and supports ISO String format to clearly represent Coordinated Universal Time</li>
+<li><em>mailboxTime</em> replaces MessageUTC for Return messages and CreateUTC for Forward messages</li>
+<li><em>stateTime</em> replaces StateUTC for (Forward) Submissions and StatusUTC for Forward Messages</li>
+</ul>
+<p>Example Return message with Message Definition File for SIN=255 uploaded to its Mailbox:</p>
+<pre class="prettyprint source"><code>&quot;messageId&quot;: 123456789,
+&quot;receiveTime&quot;: &quot;2020-05-22T07:14:44Z&quot;,
+&quot;mailboxTime&quot;: &quot;2020-05-22T07:14:44Z&quot;,
+&quot;codecServiceId&quot;: 255,
+&quot;mobileId&quot;: &quot;00000000MFREE3D&quot;,
+&quot;payloadRaw&quot; [255, 255, 0],
+&quot;payloadJson&quot;: {
+  &quot;codecServiceId&quot;: 255,
+  &quot;codecMessageId&quot;: 255,
+  &quot;name&quot;: &quot;myMessageName&quot;,
+  &quot;fields&quot;: [
+    {
+      &quot;name&quot;: &quot;myFieldName&quot;,
+      &quot;dataType&quot;: &quot;unsignedint&quot;,
+      &quot;stringValue&quot;: &quot;0&quot;
+    }
+  ]
+}
+&quot;regionName&quot;: &quot;AMERRB16&quot;,
+&quot;size&quot;: 3
+</code></pre>
+<h3>Prerequisites</h3>
+<p>To use the system you will need a valid set of Mailbox credentials provided by your Inmarsat IDP service provider.</p>
+<p>www.inmarsat.com</p>
+<h3>Installing</h3>
+<p>Install from NPM in your project directory:</p>
+<pre class="prettyprint source"><code>npm install isatdatapro-api
+</code></pre>
+<h3>Configuration</h3>
+<p>The library uses configuration file(s) in <strong>./node_modules/isatdatapro-api/config</strong>:</p>
+<ul>
+<li><em>message-gateway.js</em> sets up the active IDP gateway URL being used</li>
+<li><em>winston.js</em> sets up logging defaults to the <strong>./logs</strong> subdirectory of your project</li>
+</ul>
+<h3>Testing</h3>
+<p>The <strong>./test</strong> directory contains various Mocha/Chai test cases exercising the operations
+and expected returns, as well as a template to configure Mailbox credentials</p>
+<h2>Deployment</h2>
+<p>Generally you would set up a set of Mailboxes to poll periodically on a timer, for example every 10 seconds
+for Mobile-Originated messages and every 10+n seconds for Mobile-Terminated statuses if any messages have
+been submitted.</p>
+<p>Typically you would filter duplicates based on unique <strong>messageId</strong> and put retrieved
+or submitted messages into a database.  Also your system must keep track of <strong>nextStartTime</strong> or <strong>nextStartId</strong> as a <em>high water mark</em> for successive message or status retrieval calls.</p>
+<p>Timeouts or HTTP errors will be indicated with a Promise rejection that includes an error message
+'TIMEOUT_CONNECTION', 'TIMEOUT_READ', or 'HTTP &lt;<em>errorCode</em>&gt;'</p>
+<h2>Authors</h2>
+<ul>
+<li><strong>Geoff Bruce-Payne</strong> - <em>Initial work</em> geoff.bruce-payne@inmarsat.com</li>
+</ul>
+<h2>License</h2>
+<p>This project is licensed under the Apache 2.0 License - see the <a href="LICENSE">LICENSE</a> file for details</p></article>
+    </section>
+
 
 
 
@@ -66,7 +163,7 @@
         
 
         <footer>
-            Documentation generated by <a target="_blank" href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Sat Feb 15 2020 21:09:54 GMT-0500 (Eastern Standard Time)
+            Documentation generated by <a target="_blank" href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a> on Mon May 25 2020 17:05:51 GMT-0400 (Eastern Daylight Time)
         </footer>
     </div>
 </div>
