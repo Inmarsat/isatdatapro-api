@@ -1,6 +1,6 @@
 'use strict';
 
-//process.env.NODE_ENV = "default"
+//process.env.NODE_ENV = 'production'
 const chai = require('chai');
 chai.config.includeStack = false;
 const expect = chai.expect;
@@ -10,9 +10,12 @@ const testTerminals = require('./mailboxes-local').testTerminals;
 //const modemMessages = require('./modem-messages');
 
 // Set to 0 for simulator or 1 for live gateway
-const config = require('config');
-console.log(`Testing NODE_ENV ${config.util.getEnv('NODE_ENV')} at ${idpApi.apiUrl}`);
-const mailboxIndex = (idpApi.apiUrl.includes('api.inmarsat.com')) ? 1 : 0;
+// TODO: REMOVE const config = require('config');
+//console.log(`Testing NODE_ENV ${config.util.getEnv('NODE_ENV')} at ${idpApi.apiUrl}`);
+let mailboxIndex = 0
+if (idpApi.apiUrl.includes('api.inmarsat.com')) {
+  mailboxIndex = 2;
+}
 const testMobileId = testTerminals[mailboxIndex].mobileId;
 const auth = mailboxes[mailboxIndex];
 
@@ -70,7 +73,7 @@ describe('api-v1', function() {
   });
   
   describe('#getErrorDefinitions()', function () {
-    const keys = ['ID', 'Name', 'Description'];
+    const keys = ['errorId', 'name', 'description'];
     const testDesc = 'should return a non-empty Array of error code objects'
                       + ` with properties ${keys}`;
     it(testDesc, function () {
@@ -103,6 +106,7 @@ describe('api-v1', function() {
         it(key + ' should return ' + testCases[key], function () {
           return Promise.resolve(idpApi.getErrorName(key))
           .then(function (result) {
+            console.log(`${result}`);
             expect(result).to.equal(testCases[key]);
           })
           .catch(err => {
@@ -114,40 +118,66 @@ describe('api-v1', function() {
     })
   });
   
-  describe('#getMobileOriginatedMessages()', function () {
+  describe('#getReturnMessages()', function () {
+    /* Native API responses
     const apiKeys = ['ErrorID', 'Messages', 'More', 'NextStartUTC', 'NextStartID'];
     const messageKeys = ['ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN'];
     const payloadKeys = ['SIN', 'MIN', 'Name', 'Fields'];
+    */
+    const apiKeys = ['errorId', 'messages', 'more', 'nextStartTime', 'nextStartId'];
+    const messageKeys = ['messageId', 'mobileId', 'receiveTime', 'mailboxTime', 'satelliteRegion', 'codecServiceId', 'size'];
+    const payloadKeys = ['codecServiceId', 'codecMessageId', 'name', 'fields'];
+    const fieldKeys = ['name', 'dataType', 'stringValue'];
+    const arrayFieldKeys = ['name', 'dataType', 'arrayElements'];
+    const arrayKeys = ['index', 'fields'];
     const date = new Date();
     date.setUTCHours(date.getUTCHours() - RETRIEVAL_OFFSET);
     const filter = {
-      startTimeUtc: idpApi.dateToIdpTime(date),
+      startTimeUtc: date,
     };
     const description = `should include properties ${apiKeys}`
         + `\n\t where Messages include keys ${messageKeys}`
         + `\n\t and if a message includes Payload it has keys ${payloadKeys}`
         + '\n\t and if a message includes RawPayload it is an array';
     it(description, function () {
-      return Promise.resolve(idpApi.getMobileOriginatedMessages(auth, filter))
+      return Promise.resolve(idpApi.getReturnMessages(auth, filter))
       .then(function (result) {
-        //console.log('Returned:', JSON.stringify(result));
+        console.log('Returned:', JSON.stringify(result));
         expect(result)
           .to.be.an('Object')
           .that.has.all.keys(apiKeys);
-        expect(result.ErrorID).to.equal(0);
-        if (result.Messages !== null) {
-          for (let i = 0; i < result.Messages.length; i++) {
-            let message = result.Messages[i];
+        expect(result.errorId).to.equal(0);
+        if (result.messages !== null) {
+          for (let i = 0; i < result.messages.length; i++) {
+            let message = result.messages[i];
             expect(message)
               .to.be.an('Object')
-              .that.includes.all.keys('ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN');
+              .that.includes.all.keys(messageKeys);
             // Modem Simulator does not seem to provide OTAMessageSize...
-            if (mailboxIndex === 1) expect(message).to.include.key('OTAMessageSize');
-            if (message.RawPayload) expect(message.RawPayload).to.be.an('Array');
-            if (message.Payload) expect(message.Payload).to.have.all.keys('SIN', 'MIN', 'Name', 'Fields');
+            //if (mailboxIndex === 1) expect(message).to.include.key('OTAMessageSize');
+            if (message.payloadRaw) {
+              expect(message.payloadRaw).to.be.an('Array');
+            }
+            if (message.payloadJson) {
+              expect(message.payloadJson).to.have.all.keys(payloadKeys);
+              message.payloadJson.fields.forEach(field => {
+                if (field.dataType !== 'array' && field.dataType !== 'message') {
+                  expect(field).to.have.all.keys(fieldKeys);
+                } else {
+                  // TODO: support message dataType?
+                  expect(field).to.have.all.keys(arrayFieldKeys);
+                  field.arrayElements.forEach(element => {
+                    expect(element).to.have.all.keys(arrayKeys);
+                    element.fields.forEach(field => {
+                      expect(field).to.have.all.keys(fieldKeys);
+                    });
+                  });
+                }
+              });
+            }
           }
         }
-        expect(result.NextStartID).to.be.a('number');
+        expect(result.nextStartId).to.be.a('number');
       })
       .catch(err => {
         console.log(`Error: ${err.message}`);
@@ -158,9 +188,13 @@ describe('api-v1', function() {
   });
   
   describe('#getMobileIds()', function () {
+    /*
     const apiKeys = ['ErrorID', 'Mobiles'];
     const mobileKeys = ['ID', 'Description', 'LastRegistrationUTC', 'RegionName'];
-    const description = 'should return a list of Mobile information including' +
+    */
+   const apiKeys = ['errorId', 'mobiles'];
+   const mobileKeys = ['mobileId', 'description', 'lastRegistrationTime', 'satelliteRegion'];
+   const description = 'should return a list of Mobile information including' +
                         `${mobileKeys}`;
     it(description, function () {
       //const auth = mailboxes[mailboxIndex];
@@ -170,10 +204,10 @@ describe('api-v1', function() {
         expect(result)
           .to.be.an('Object')
           .that.includes.all.keys(apiKeys);
-        expect(result.ErrorID).to.equal(0);
-        if (result.Mobiles !== null) {
-          for (let i = 0; i < result.Mobiles.length; i++) {
-            expect(result.Mobiles[i])
+        expect(result.errorId).to.equal(0);
+        if (result.mobiles !== null) {
+          for (let i = 0; i < result.mobiles.length; i++) {
+            expect(result.mobiles[i])
               .to.be.an('Object')
               .that.includes.all.keys(mobileKeys);
           }
@@ -191,48 +225,45 @@ describe('api-v1', function() {
     const TEST_MESSAGE_SIZE = 100;
     let forwardIds = [];
     
-    describe('#submitMobileTerminatedMessages()', function () {
+    describe('#submitForwardMessages()', function () {
       let userMessageId = 0;
       beforeEach(function() {
         userMessageId += 1;
       });
-      const apiKeys = ['ErrorID', 'Submissions'];
-      const submissionKeys = ['ErrorID', 'ForwardMessageID', 'UserMessageID', 
-        'DestinationID', 'StateUTC', 'ScheduledSendUTC', 'TerminalWakeupPeriod',
-        'OTAMessageSize'
+      const apiKeys = ['errorId', 'submissions'];
+      const submissionKeys = ['errorId', 'messageId', 'userMessageId', 
+        'mobileId', 'stateTime', 'scheduledSendTime', 'mobileWakeupPeriod',
+        'size'
       ];
       const description = `should return an array of Submissions with ${submissionKeys}`;
       it(description, function () {
         //const auth = mailboxes[mailboxIndex];
         const testMessage = {
-          DestinationID: testMobileId,
-          UserMessageID: userMessageId,
+          mobileId: testMobileId,
+          userMessageId: userMessageId,
           //Payload: modemMessages.pingModemRequest.Payload,  // will not display in Modem Simulator but will solicit response
-          RawPayload: [255, 255],   // will display in Modem Simulator "To-Mobile Messages" pane
+          payloadRaw: [0, 72],   // will display in Modem Simulator "To-Mobile Messages" pane
         };
-        for (let i=0; i < TEST_MESSAGE_SIZE -2; i++) {
-          testMessage.RawPayload.push(i);
-        }
         const messages = [testMessage];
-        return Promise.resolve(idpApi.submitMobileTerminatedMessages(auth, messages))
+        return Promise.resolve(idpApi.submitForwardMessages(auth, messages))
         .then(function (result) {
           expect(result)
             .to.be.an('Object')
             .that.includes.all.keys(apiKeys);
-          expect(result.ErrorID).to.equal(0);
-          expect(result.Submissions)
+          expect(result.errorId).to.equal(0);
+          expect(result.submissions)
             .to.be.an('Array')
             .that.has.lengthOf(1);
-          var submission = result.Submissions[0];
+          let submission = result.submissions[0];
           expect(submission)
             .to.be.an('Object')
             .that.includes.all.keys(submissionKeys);
-          forwardIds.push(submission.ForwardMessageID);
-          console.log(`Added ${submission.ForwardMessageID} to forwardIds ${JSON.stringify(forwardIds)}`);
-          expect(submission.UserMessageID).to.equal(userMessageId);
-          expect(submission.DestinationID).to.equal(testMobileId);
-          if (submission.TerminalWakeupPeriod) {
-            expect(submission).has.property('ScheduledSendUTC');
+          forwardIds.push(submission.messageId);
+          console.log(`Added ${submission.messageId} to forwardIds ${JSON.stringify(forwardIds)}`);
+          expect(submission.userMessageId).to.equal(userMessageId);
+          expect(submission.mobileId).to.equal(testMobileId);
+          if (submission.mobileWakeupPeriod) {
+            expect(submission).has.property('scheduledSendTime');
           }
         })
         .catch(err => {
@@ -242,12 +273,12 @@ describe('api-v1', function() {
       })
     });
     
-    describe('#getMobileTerminatedStatuses()', function () {
+    describe('#getForwardStatuses()', function () {
       //const auth = mailboxes[mailboxIndex];
       //Get the status of the submitted message
-      const apiKeys = ['ErrorID', 'Statuses', 'More', 'NextStartUTC'];
-      const statusKeys = ['ErrorID', 'ForwardMessageID', 'ReferenceNumber',
-        'State', 'StateUTC', 'IsClosed'
+      const apiKeys = ['errorId', 'statuses', 'more', 'nextStartTime'];
+      const statusKeys = ['errorId', 'messageId', 'referenceNumber',
+        'state', 'stateTime', 'isClosed'
       ];
       const description = `should return an array of Statuses with ${statusKeys}`;
       it(description, function () {
@@ -258,33 +289,33 @@ describe('api-v1', function() {
         } else {
           const date = new Date();
           date.setUTCHours(date.getUTCHours() - RETRIEVAL_OFFSET);
-          filter.startTimeUtc = idpApi.dateToIdpTime(date)
+          filter.startTimeUtc = date;
         }
-        return Promise.resolve(idpApi.getMobileTerminatedStatuses(auth, filter))
+        return Promise.resolve(idpApi.getForwardStatuses(auth, filter))
         .then(function (result) {
-          //console.log('getMobileTerminatedStatuses RESULT: ' + JSON.stringify(result, null, 2));
+          //console.log('getForwardStatuses RESULT: ' + JSON.stringify(result, null, 2));
           expect(result)
             .to.be.an('Object')
             .that.includes.all.keys(apiKeys);
-          if (result.ErrorID !== 0) {
-            idpApi.getErrorName(result.ErrorID).then(errorName => {
-              console.log('getMobileTerminatedStatuses ERROR: ' + errorName);
+          if (result.errorId !== 0) {
+            idpApi.getErrorName(result.errorId).then(errorName => {
+              console.log('getForwardStatuses ERROR: ' + errorName);
             });
           }
-          expect(result.ErrorID).to.equal(0);
-          expect(result.More).to.be.a('boolean');
-          if (result.More) {
-            expect(result.NextStartUTC).to.be.a('string');
+          expect(result.errorId).to.equal(0);
+          expect(result.more).to.be.a('boolean');
+          if (result.more) {
+            expect(result.nextStartTime).to.be.a('string');
           }
-          expect(result.Statuses).to.be.an('Array');
-          for (let i = 0; i < result.Statuses.length; i++) {
-            let status = result.Statuses[i];
+          expect(result.statuses).to.be.an('Array');
+          for (let i = 0; i < result.statuses.length; i++) {
+            let status = result.statuses[i];
             expect(status)
               .to.be.an('Object')
               .that.includes.all.keys(statusKeys);
-            expect(status.ErrorID).to.be.a('number');
-            expect(status.State).to.be.a('number');
-            expect(status.StateUTC).to.be.a('string');
+            expect(status.errorId).to.be.a('number');
+            expect(status.state).to.be.a('number');
+            expect(status.stateTime).to.be.a('string');
           }
         })
         .catch(err => {
@@ -294,23 +325,23 @@ describe('api-v1', function() {
       });
     });
     
-    describe('#getMobileTerminatedMessages()', function() {
-      const apiKeys = ['ErrorID', 'Messages'];
-      const messageKeys = ['ID', 'DestinationID', 'CreateUTC', 'ErrorID',
-        'IsClosed', 'State', 'StatusUTC', 'ReferenceNumber', 'Payload', 'RawPayload'
+    describe('#getForwardMessages()', function() {
+      const apiKeys = ['errorId', 'messages'];
+      const messageKeys = ['messageId', 'mobileId', 'mailboxTime', 'errorId',
+        'isClosed', 'state', 'stateTime', 'referenceNumber', 'payloadJson', 'payloadRaw'
       ];
       it(`should return array of message(s) each with ${messageKeys}`, function () {
         if (forwardIds.length > 0) {
-          return Promise.resolve(idpApi.getMobileTerminatedMessages(auth, forwardIds))
+          return Promise.resolve(idpApi.getForwardMessages(auth, forwardIds))
           .then(function (result) {
-            //console.log('getMobileTerminatedMessages RESULT: ' + JSON.stringify(result, null, 2));
+            //console.log('getForwardMessages RESULT: ' + JSON.stringify(result, null, 2));
             expect(result)
               .to.be.an('Object')
               .that.includes.all.keys(apiKeys);
-            expect(result.ErrorID).to.equal(0);
-            expect(result.Messages).to.be.an('Array').that.has.lengthOf.greaterThan(0);
-            for (let i = 0; i < result.Messages.length; i++) {
-              let message = result.Messages[i];
+            expect(result.errorId).to.equal(0);
+            expect(result.messages).to.be.an('Array').that.has.lengthOf.greaterThan(0);
+            for (let i = 0; i < result.messages.length; i++) {
+              let message = result.messages[i];
               expect(message)
                 .to.be.an('Object')
                 .that.includes.all.keys(messageKeys);
@@ -325,27 +356,27 @@ describe('api-v1', function() {
       //Retrieve the message that was submitted
     });
   
-    describe('#cancelMobileTerminatedMessages()', function() {
-      const apiKeys = ['ErrorID', 'Submissions'];
-      const submissionKeys = ['ErrorID', 'ForwardMessageID', 'UserMessageID', 
-        'DestinationID', 'StateUTC', 'ScheduledSendUTC', 'TerminalWakeupPeriod',
-        'OTAMessageSize'
+    describe('#cancelForwardMessages()', function() {
+      const apiKeys = ['errorId', 'submissions'];
+      const submissionKeys = ['errorId', 'messageId', 'userMessageId', 
+        'mobileId', 'stateTime', 'scheduledSendTime', 'mobileWakeupPeriod',
+        'size'
       ];
       const description = `should return a list of submissions each with ${submissionKeys}`;
       //Retrieve the message that was submitted
       it(description, function () {
         if (forwardIds.length > 0) {
           let ids = forwardIds[forwardIds.length - 1];
-          return Promise.resolve(idpApi.cancelMobileTerminatedMessages(auth, ids))
+          return Promise.resolve(idpApi.cancelForwardMessages(auth, ids))
           .then(function (result) {
-            //console.log('cancelMobileTerminatedMessages RESULT: ' + JSON.stringify(result, null, 2));
+            //console.log('cancelForwardMessages RESULT: ' + JSON.stringify(result, null, 2));
             expect(result)
               .to.be.an('Object')
               .that.includes.all.keys(apiKeys);
-            expect(result.ErrorID).to.equal(0);
-            expect(result.Submissions).to.be.an('Array').that.has.lengthOf.greaterThan(0);
-            for (let i = 0; i < result.Submissions.length; i++) {
-              let submission = result.Submissions[i];
+            expect(result.errorId).to.equal(0);
+            expect(result.submissions).to.be.an('Array').that.has.lengthOf.greaterThan(0);
+            for (let i = 0; i < result.submissions.length; i++) {
+              let submission = result.submissions[i];
               expect(submission)
                 .to.be.an('Object')
                 .that.includes.all.keys(submissionKeys);
@@ -360,9 +391,9 @@ describe('api-v1', function() {
     });
     
   });
-  describe('#getMtStateDef()', function() {
+  describe('#getStateDefinition()', function() {
     let state = 0;
-    let stateDef = idpApi.getMtStateDef(state);
+    let stateDef = idpApi.getStateDefinition(state);
     it('should return SUBMITTED', function() {
       expect(stateDef).to.equal('SUBMITTED');
     })
