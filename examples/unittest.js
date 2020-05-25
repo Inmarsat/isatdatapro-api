@@ -5,7 +5,8 @@ const idpApi = require('../lib/api-v1');
 
 //const gateway = require('../config/default.json').idpGatewayUrl;
 const gateway = idpApi.apiUrl;
-const myMailbox = require('../test/mailboxes-local').credentials[1];
+const myMailbox = require('../test/mailboxes-local').credentials[2];
+const myMobileId = require('../test/mailboxes-local').testTerminals[2].mobileId;
 
 /**
  * Retrieves messages from the specified Mailbox and prints to console
@@ -27,15 +28,13 @@ async function getMessages() {
       console.log(`Error: ${errorName}`);
     } else {
       if (result.messages !== null) {
-        let nextTime = idpApi.idpTimeToDate(result.nextStartTime);
+        let nextTime = new Date(result.nextStartTime);
         console.log(`Next: ${nextTime} (IDP time: ${idpApi.dateToIdpTime(nextTime)})`);
-        console.log(`${result.messages.length} messages returned`);
-        /*
-        for (let i = 0; i < result.Messages.length; i++) {
-          let message = result.Messages[i];
+        console.log(`${result.messages.length} messages retrieved`);
+        for (let i = 0; i < Math.min(result.messages.length, 2); i++) {
+          let message = result.messages[i];
           console.log(`Message ${i}: ${JSON.stringify(message, null, 2)}`);
         }
-        */
       } else {
         console.log(`No messages to retreive from ${myMailbox.accessId}.`);
       }
@@ -74,8 +73,9 @@ async function submitMessages() {
     password: myMailbox.password
   };
   const testMessage = {
-    mobileId: '01105596SKY37E9',
-    payloadRaw: [0, 72],   // will display in Modem Simulator "To-Mobile Messages" pane
+    mobileId: myMobileId,
+    //payloadRaw: [0, 72],   // will display in Modem Simulator "To-Mobile Messages" pane
+    payloadRaw: [0, 100, 2],
   };
   const messages = [testMessage];
   return Promise.resolve(idpApi.submitForwardMessages(auth, messages, gateway))
@@ -171,9 +171,9 @@ async function cancelForwardMessage() {
   });
 }
 
-getMessages();
+//getMessages();
 //getMobiles();
 //submitMessages();
-//getStatuses();
+getStatuses();
 //getForwardMessage();
 //cancelForwardMessage();

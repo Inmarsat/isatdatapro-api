@@ -9,15 +9,17 @@ and Mailbox polling for message collection and submission.
 
 ### Key Concepts
 
-#### Mailboxes and Mobile IDs
+#### Mailbox
 
 All data is transacted through the IDP system via a Mailbox concept that provides a unique access credential 
 typically mapped either to your particular application use-case, or to your customer's span of control.
 
+#### Mobile
+
 Modems on the network use globally unique Mobile ID serial numbers for addressing, where any number of 
 Mobile IDs may be provisioned against a particular Mailbox.
 
-#### Messages
+#### Message
 
 Messages are binary blobs sent over the satellite network that may optionally be mapped to a codec 
 provisioned on a Mailbox.
