@@ -103,7 +103,6 @@ npm install isatdatapro-api
 
 The library uses configuration file(s) in **./node_modules/isatdatapro-api/config**:
 
-* *message-gateway.js* sets up the active IDP gateway URL being used
 * *winston.js* sets up logging defaults to the **./logs** subdirectory of your project
 
 ### Testing
