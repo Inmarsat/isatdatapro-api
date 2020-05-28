@@ -58,14 +58,14 @@ concepts:
 * *payloadRaw* replaces RawPayload
 * *payloadJson* replaces Payload
 * *Time* replaces UTC and supports ISO String format to clearly represent Coordinated Universal Time
-* *mailboxTime* replaces MessageUTC for Return messages and CreateUTC for Forward messages
-* *stateTime* replaces StateUTC for (Forward) Submissions and StatusUTC for Forward Messages
+* *mailboxTimeUtc* replaces MessageUTC for Return messages and CreateUTC for Forward messages
+* *stateTimeUtc* replaces StateUTC for (Forward) Submissions and StatusUTC for Forward Messages
 
 Example Return message with Message Definition File for SIN=255 uploaded to its Mailbox:
 ```
 "messageId": 123456789,
-"receiveTime": "2020-05-22T07:14:44Z",
-"mailboxTime": "2020-05-22T07:14:44Z",
+"receiveTimeUtc": "2020-05-22T07:14:44Z",
+"mailboxTimeUtc": "2020-05-22T07:14:44Z",
 "codecServiceId": 255,
 "mobileId": "00000000MFREE3D",
 "payloadRaw" [255, 255, 0],
