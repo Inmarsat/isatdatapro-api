@@ -28,7 +28,7 @@ async function getMessages() {
       console.log(`Error: ${errorName}`);
     } else {
       if (result.messages !== null) {
-        let nextTime = new Date(result.nextStartTime);
+        let nextTime = new Date(result.nextStartTimeUtc);
         console.log(`Next: ${nextTime} (IDP time: ${idpApi.dateToIdpTime(nextTime)})`);
         console.log(`${result.messages.length} messages retrieved`);
         for (let i = 0; i < Math.min(result.messages.length, 2); i++) {

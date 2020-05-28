@@ -19,8 +19,8 @@ describe('#getReturnMessages()', function () {
   const messageKeys = ['ID', 'MobileID', 'ReceiveUTC', 'MessageUTC', 'RegionName', 'SIN'];
   const payloadKeys = ['SIN', 'MIN', 'Name', 'Fields'];
   */
-  const apiKeys = ['errorId', 'messages', 'more', 'nextStartTime', 'nextStartId'];
-  const messageKeys = ['messageId', 'mobileId', 'receiveTime', 'mailboxTime', 'satelliteRegion', 'codecServiceId', 'size'];
+  const apiKeys = ['errorId', 'messages', 'more', 'nextStartTimeUtc', 'nextStartId'];
+  const messageKeys = ['messageId', 'mobileId', 'receiveTimeUtc', 'mailboxTimeUtc', 'satelliteRegion', 'codecServiceId', 'size'];
   const payloadKeys = ['codecServiceId', 'codecMessageId', 'name', 'fields'];
   const fieldKeys = ['name', 'dataType', 'stringValue'];
   const arrayFieldKeys = ['name', 'dataType', 'arrayElements'];
@@ -85,7 +85,7 @@ describe('#getReturnMessages()', function () {
               });
             }
           });
-          expect(result.nextStartTime).to.be.a('string').not.equal('');
+          expect(result.nextStartTimeUtc).to.be.a('string').not.equal('');
           if(result.more) {
             expect(result.nextStartId).to.be.a('number').above(-1);
           } else {

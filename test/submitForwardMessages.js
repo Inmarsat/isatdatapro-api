@@ -25,7 +25,7 @@ describe('#ForwardMessage test suite', function() {
     });
     const apiKeys = ['errorId', 'submissions'];
     const submissionKeys = ['errorId', 'messageId', 'userMessageId', 
-      'mobileId', 'stateTime', 'scheduledSendTime', 'mobileWakeupPeriod',
+      'mobileId', 'stateTimeUtc', 'scheduledSendTimeUtc', 'mobileWakeupPeriod',
       'size'
     ];
     const description = `should return an array of Submissions `
@@ -51,7 +51,7 @@ describe('#ForwardMessage test suite', function() {
         expect(submission.userMessageId).to.equal(userMessageId);
         expect(submission.mobileId).to.equal(testMobileId);
         if (submission.mobileWakeupPeriod) {
-          expect(submission).has.property('scheduledSendTime');
+          expect(submission).has.property('scheduledSendTimeUtc');
         }
       })
       .catch(err => {
@@ -64,9 +64,9 @@ describe('#ForwardMessage test suite', function() {
   describe('#getForwardStatuses()', function () {
     //const auth = mailboxes[mailboxIndex];
     //Get the status of the submitted message
-    const apiKeys = ['errorId', 'statuses', 'more', 'nextStartTime'];
+    const apiKeys = ['errorId', 'statuses', 'more', 'nextStartTimeUtc'];
     const statusKeys = ['errorId', 'messageId', 'referenceNumber',
-      'state', 'stateTime', 'isClosed'
+      'state', 'stateTimeUtc', 'isClosed'
     ];
     const description = `should return an array of Statuses with ${statusKeys}`;
     it(description, function () {
@@ -91,7 +91,7 @@ describe('#ForwardMessage test suite', function() {
         expect(result.errorId).to.equal(0);
         expect(result.more).to.be.a('boolean');
         if (result.more) {
-          expect(result.nextStartTime).to.be.a('string');
+          expect(result.nextStartTimeUtc).to.be.a('string');
         }
         expect(result.statuses).to.be.an('Array');
         for (let i = 0; i < result.statuses.length; i++) {
@@ -101,7 +101,7 @@ describe('#ForwardMessage test suite', function() {
             .that.includes.all.keys(statusKeys);
           expect(status.errorId).to.be.a('number');
           expect(status.state).to.be.a('number');
-          expect(status.stateTime).to.be.a('string');
+          expect(status.stateTimeUtc).to.be.a('string');
         }
       })
       .catch(err => {
@@ -113,8 +113,8 @@ describe('#ForwardMessage test suite', function() {
   
   describe('#getForwardMessages()', function() {
     const apiKeys = ['errorId', 'messages'];
-    const messageKeys = ['messageId', 'mobileId', 'mailboxTime', 'errorId',
-      'isClosed', 'state', 'stateTime', 'referenceNumber', 'payloadJson', 'payloadRaw'
+    const messageKeys = ['messageId', 'mobileId', 'mailboxTimeUtc', 'errorId',
+      'isClosed', 'state', 'stateTimeUtc', 'referenceNumber', 'payloadJson', 'payloadRaw'
     ];
     it(`should return array of message(s) each with ${messageKeys}`, function () {
       if (forwardIds.length > 0) {
@@ -143,7 +143,7 @@ describe('#ForwardMessage test suite', function() {
   describe('#cancelForwardMessages()', function() {
     const apiKeys = ['errorId', 'submissions'];
     const submissionKeys = ['errorId', 'messageId', 'userMessageId', 
-      'mobileId', 'stateTime', 'scheduledSendTime', 'mobileWakeupPeriod',
+      'mobileId', 'stateTimeUtc', 'scheduledSendTimeUtc', 'mobileWakeupPeriod',
       'size'
     ];
     const description = `should return a list of submissions each with ${submissionKeys}`;

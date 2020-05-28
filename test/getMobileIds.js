@@ -16,7 +16,7 @@ describe('#getMobileIds()', function () {
   const mobileKeys = ['ID', 'Description', 'LastRegistrationUTC', 'RegionName'];
   */
   const apiKeys = ['errorId', 'mobiles'];
-  const mobileKeys = ['mobileId', 'description', 'lastRegistrationTime', 'satelliteRegion'];
+  const mobileKeys = ['mobileId', 'description', 'lastRegistrationTimeUtc', 'satelliteRegion'];
   const description = 'should return a list of Mobile information including' +
                       `${mobileKeys}`;
   it(description, function () {
