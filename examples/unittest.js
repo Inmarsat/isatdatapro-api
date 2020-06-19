@@ -171,7 +171,7 @@ async function cancelForwardMessage() {
   });
 }
 
-getMessages();
+//getMessages();
 //getMobiles();
 //submitMessages();
 //getStatuses();

@@ -14,7 +14,8 @@ and Mailbox polling for message collection and submission.
 #### Mailbox
 
 All data is transacted through the IDP system via a Mailbox concept that provides a unique access credential 
-typically mapped either to your particular application use-case, or to your customer's span of control.  Mailboxes have a unique authentication pair: *accessId* and *password*.
+typically mapped either to your particular application use-case, or to your customer's span of control.  
+Mailboxes have a unique authentication pair: *accessId* and *password*.
 
 #### Mobile
 
