@@ -2,11 +2,16 @@
 
 //const idpApi = require('isatdatapro-api');
 const idpApi = require('../lib/api-v1');
+const { dateToIdpTime } = require('../lib/api-v1');
 
 //const gateway = require('../config/default.json').idpGatewayUrl;
 const gateway = "http://localhost:3333/";
 const myMailbox = require('../test/mailboxes-local').credentials[2];
 const myMobileId = require('../test/mailboxes-local').testTerminals[2].mobileId;
+
+function getIdpTimeFromDate(date) {
+  console.log(`IDP timestamp: ${dateToIdpTime(date)}`);
+}
 
 /**
  * Retrieves messages from the specified Mailbox and prints to console
@@ -171,6 +176,7 @@ async function cancelForwardMessage() {
   });
 }
 
+//getIdpTimeFromDate('2020-06-24T19:33:00.922Z');
 //getMessages();
 //getMobiles();
 //submitMessages();
