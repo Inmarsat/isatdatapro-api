@@ -1,3 +1,3 @@
 {
-  "idpGatewayUrl": "http://192.168.1.120:8080//GLGW/GWServices_v1/RestMessages.svc/"
+  "idpGatewayUrl": "http://localhost:3333/"
 }
