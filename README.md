@@ -56,9 +56,10 @@ concepts:
 * *codecMessageId* replaces MIN
 * *dataType* replaces Type within Fields
 * *stringValue* replaces Value within Fields, which are represented as strings on the native API
+* *arrayElements* replaces Elements for array dataType
 * *payloadRaw* replaces RawPayload
 * *payloadJson* replaces Payload
-* *Time* replaces UTC and supports ISO String format to clearly represent Coordinated Universal Time
+* ...*TimeUtc* replaces UTC and supports ISO String format to clearly represent Coordinated Universal Time
 * *mailboxTimeUtc* replaces MessageUTC for Return messages and CreateUTC for Forward messages
 * *stateTimeUtc* replaces StateUTC for (Forward) Submissions and StatusUTC for Forward Messages
 
