@@ -144,7 +144,7 @@ describe('#ForwardMessage test suite', function() {
     const apiKeys = ['errorId', 'submissions'];
     const submissionKeys = ['errorId', 'messageId', 'userMessageId', 
       'mobileId', 'stateTimeUtc', 'scheduledSendTimeUtc', 'mobileWakeupPeriod',
-      'size'
+      'mobileSleepSeconds', 'size'
     ];
     const description = `should return a list of submissions each with ${submissionKeys}`;
     //Retrieve the message that was submitted

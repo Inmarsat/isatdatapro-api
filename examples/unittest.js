@@ -4,8 +4,8 @@
 const idpApi = require('../lib/api-v1');
 const { dateToIdpTime } = require('../lib/api-v1');
 
-//const gateway = require('../config/default.json').idpGatewayUrl;
-const gateway = "http://localhost:3333/";
+const gateway = require('../config/default.json').idpGatewayUrl;
+//const gateway = require('../config/local-sim.json').idpGatewayUrl;
 const myMailbox = require('../test/mailboxes-local').credentials[2];
 const myMobileId = require('../test/mailboxes-local').testTerminals[2].mobileId;
 
