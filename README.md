@@ -49,7 +49,7 @@ messages will be presented as JSON objects represented by some metadata and a da
 
 ##### Native API remapping
 
-Version 1.0 of the library remaps the native Inmarsat API JSON tags to camelCase and abstracts certain 
+Version 1.2 of the library remaps the native Inmarsat API JSON tags to camelCase and abstracts certain 
 concepts:
 
 * *codecServiceId* replaces SIN
@@ -59,9 +59,12 @@ concepts:
 * *arrayElements* replaces Elements for array dataType
 * *payloadRaw* replaces RawPayload
 * *payloadJson* replaces Payload
-* ...*TimeUtc* replaces UTC and supports ISO String format to clearly represent Coordinated Universal Time
-* *mailboxTimeUtc* replaces MessageUTC for Return messages and CreateUTC for Forward messages
-* *stateTimeUtc* replaces StateUTC for (Forward) Submissions and StatusUTC for Forward Messages
+* ...*TimeUtc* generally replaces UTC for clarity, and presents ISO string format (no milliseconds)
+* *receiveTimeUtc* replaces ReceiveUTC for Return messages
+* *mailboxTimeUtc* replaces MessageUTC for Return messages and CreateUTC for Forward mesages
+* *stateTimeUtc* replaces StateUTC for (Forward) Submissions and StatusUTC for Forward messages
+* *mobileSleepSeconds* replaces TerminalWakeupPeriod for Forward messages
+* *mobileWakeupPeriod* contains the enumerated value of wakeupPeriod as configured/reported OTA
 
 Example Return message with Message Definition File for SIN=255 uploaded to its Mailbox:
 ```
