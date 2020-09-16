@@ -80,7 +80,7 @@ async function submitMessages() {
   const testMessage = {
     mobileId: myMobileId,
     //payloadRaw: [0, 72],   // will display in Modem Simulator "To-Mobile Messages" pane
-    payloadRaw: [0, 100, 2],
+    payloadRaw: [0, 100, 2],   // getTxMetrics (LastFullMinute)
   };
   const messages = [testMessage];
   return Promise.resolve(idpApi.submitForwardMessages(auth, messages, gateway))
