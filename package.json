@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "jaguarjs-jsdoc": "^1.1.0",
-    "request": "^2.88.0",
+    "request": "^2.88.2",
     "winston": "^3.2.1"
   },
   "directories": {
