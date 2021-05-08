@@ -20,12 +20,11 @@
   "author": "Geoff Bruce-Payne <gbrucepayne@hotmail.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "chai": "^4.2.0",
-    "jsdoc": "^3.6.4",
-    "mocha": "^6.2.2"
+    "chai": "4.3.4",
+    "mocha": "6.2.3",
+    "sinon": "10.0.0"
   },
   "dependencies": {
-    "jaguarjs-jsdoc": "^1.1.0",
     "request": "^2.88.0",
     "winston": "^3.2.1"
   },
